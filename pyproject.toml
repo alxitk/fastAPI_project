@@ -1,0 +1,27 @@
+[project]
+name = "fastapi-project"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Oleksii Drenov",email = "leshadrenev@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi (>=0.128.0,<0.129.0)",
+    "sqlalchemy (>=2.0.45,<3.0.0)",
+    "uvicorn (>=0.40.0,<0.41.0)",
+    "aiosqlite (>=0.22.1,<0.23.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "black (>=25.12.0,<26.0.0)",
+    "isort (>=7.0.0,<8.0.0)",
+    "pytest (>=9.0.2,<10.0.0)"
+]
