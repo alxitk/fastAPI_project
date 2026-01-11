@@ -2,7 +2,7 @@ from datetime import datetime, date
 from enum import Enum
 from typing import Optional
 
-from sqlalchemy import Integer, String, Boolean, DateTime, func, ForeignKey, Date, Text
+from sqlalchemy import Integer, String, Boolean, DateTime, func, ForeignKey, Date, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -92,3 +92,5 @@ class UserProfileModel(Base):
         uselist=False,
         lazy="joined"
     )
+
+    __table_args__ = (UniqueConstraint("user_id"),)
