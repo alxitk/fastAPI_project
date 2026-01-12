@@ -1,11 +1,11 @@
 from datetime import datetime, timezone, timedelta
-from tokenize import String
 
-from sqlalchemy import Integer, DateTime, ForeignKey
+from sqlalchemy import Integer, DateTime, ForeignKey, String
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from app.database.base import Base
 from app.modules.users.models.user import User
+from app.utils.tokens import generate_secure_token
 
 
 class TokenBaseModel(Base):
@@ -16,7 +16,7 @@ class TokenBaseModel(Base):
         String(64),
         unique=True,
         nullable=False,
-        # default=generate_secure_token
+        default=generate_secure_token
     )
     expires_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -47,5 +47,5 @@ class RefreshTokenModel(TokenBaseModel):
         String(512),
         unique=True,
         nullable=False,
-        # default=generate_secure_token
+        default=generate_secure_token
     )
