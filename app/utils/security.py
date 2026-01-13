@@ -42,7 +42,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def validate_strong_password(cls, value: str) -> str:
+def validate_strong_password(value: str) -> str:
     if len(value) < 8:
         raise ValueError("Password must contain at least 8 characters.")
     if not re.search(r'[A-Z]', value):
