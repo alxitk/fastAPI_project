@@ -1,21 +1,25 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+from typing import AsyncGenerator
 
-SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///./online_cinema.db"
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-engine = create_async_engine(
-    SQLALCHEMY_DATABASE_URL,
-    echo=True,
-    future=True
-)
+SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://user:password@localhost/dbname"
 
-SessionLocal = sessionmaker(
+engine = create_async_engine(SQLALCHEMY_DATABASE_URL)
+
+async_session_local = async_sessionmaker(
     engine,
     class_=AsyncSession,
     expire_on_commit=False,
-    future=True
+    autoflush=False,
+    echo=True,
 )
 
-async def get_db():
-    async with SessionLocal() as session:
-        yield session
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session_local() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
