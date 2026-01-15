@@ -2,7 +2,13 @@ from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@postgres:5432/online_cinema"
+from app.config.dependencies import get_settings
+
+settings = get_settings()
+
+SQLALCHEMY_DATABASE_URL = (
+    f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_DB_PORT}/{settings.POSTGRES_DB}"
+)
 
 engine = create_async_engine(SQLALCHEMY_DATABASE_URL)
 
