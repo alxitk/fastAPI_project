@@ -57,3 +57,7 @@ class UserLoginResponseSchema(BaseModel):
     model_config = {
         "extra": "forbid"
     }
+
+
+class MessageResponseSchema(BaseModel):
+    message: str
