@@ -1,14 +1,16 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import delete, select
 
 from app.exceptions.exceptions import InvalidCredentialsError, UserNotActiveError, TokenNotFoundError
+from app.modules.users.models.enums import UserGroupEnum
 from app.modules.users.models.token import RefreshTokenModel, PasswordResetTokenModel
-from app.modules.users.models.user import User
+from app.modules.users.models.user import User, UserGroupModel
 from app.utils.interfaces import JWTAuthManagerInterface
-from app.utils.security import verify_password, hash_password
+from app.utils.security import verify_password, hash_password, pwd_context
 
 
 class AuthService:
@@ -26,6 +28,32 @@ class AuthService:
         self._db = db
         self._jwt_manager = jwt_manager
         self._login_time_days = login_time_days
+
+    async def register_user(self, email: str, password: str) -> User:
+        stmt = select(User).where(User.email == email)
+        result = await self._db.execute(stmt)
+        existing_user = result.scalars().first()
+        if existing_user:
+            raise HTTPException(status_code=409, detail="User already exists")
+
+        stmt = select(UserGroupModel).where(UserGroupModel.name == UserGroupEnum.USER)
+        result = await self._db.execute(stmt)
+        user_group = result.scalars().first()
+        if not user_group:
+            raise HTTPException(status_code=500, detail="Default user group not found")
+
+        hashed_password = pwd_context.hash(password)
+        new_user = User(
+            email=email,
+            _hashed_password=hashed_password,
+            is_active=True,
+            group_id=user_group.id
+        )
+
+        self._db.add(new_user)
+        await self._db.commit()
+        await self._db.refresh(new_user)
+        return new_user
 
 
     async def login(self, email: str, password: str) -> tuple[str, str]:
