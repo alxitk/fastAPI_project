@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:16
+    container_name: postgres
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -11,16 +12,41 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-fastapi_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
 
   web:
     build: .
+    container_name: web
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - .:/app
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_HOST: postgres
+      POSTGRES_DB_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-fastapi_db}
+      SECRET_KEY_ACCESS: ${SECRET_KEY_ACCESS}
+      SECRET_KEY_REFRESH: ${SECRET_KEY_REFRESH}
+      JWT_SIGNING_ALGORITHM: ${JWT_SIGNING_ALGORITHM:-HS256}
+      ENVIRONMENT: ${ENVIRONMENT:-developing}
+    networks:
+      - app-network
 
 volumes:
   postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
