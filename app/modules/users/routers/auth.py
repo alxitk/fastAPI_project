@@ -1,0 +1,135 @@
+from fastapi import APIRouter, Depends, status, HTTPException
+
+from app.config.dependencies import get_auth_service
+from app.modules.users.schemas.token_schema import TokenRefreshResponseSchema, TokenRefreshRequestSchema
+from app.modules.users.schemas.user_schema import UserLoginResponseSchema, UserLoginRequestSchema, MessageResponseSchema, UserRegistrationRequestSchema
+from app.modules.users.schemas.password_schema import (
+    PasswordResetRequestSchema,
+    PasswordResetCompleteRequestSchema,
+)
+from app.modules.users.services.auth_service import AuthService
+
+auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+
+@auth_router.post(
+    "/login",
+    response_model=UserLoginResponseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="User Login",
+)
+async def login(
+    data: UserLoginRequestSchema,
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    """
+    Login a user and return access + refresh tokens.
+    """
+    access_token, refresh_token = await auth_service.login(
+        email=data.email,
+        password=data.password,
+    )
+    return UserLoginResponseSchema(
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )
+
+
+@auth_router.post(
+    "/register",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_201_CREATED,
+    summary="User registration",
+)
+async def register(
+    data: UserRegistrationRequestSchema,
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    """
+    Register a new user and send activation email.
+    """
+    await auth_service.register_user(
+        email=data.email,
+        password=data.password,
+    )
+    return MessageResponseSchema(
+        message="Registration successful. Please check your email to activate your account."
+    )
+
+
+@auth_router.post(
+    "/refresh",
+    response_model=TokenRefreshResponseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="Refresh access token using refresh token",
+)
+async def refresh_token(
+    data: TokenRefreshRequestSchema,
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    """
+    Refresh access token using a valid refresh token.
+    """
+    new_access_token = await auth_service.refresh_access_token(data.refresh_token)
+    return TokenRefreshResponseSchema(access_token=new_access_token)
+
+
+@auth_router.post(
+    "/logout",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="Logout user from current device (delete refresh token)",
+)
+async def logout(
+    data: TokenRefreshRequestSchema,
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    await auth_service.logout(data.refresh_token)
+    return MessageResponseSchema(message="Logged out successfully.")
+
+
+@auth_router.post(
+    "/logout-all",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="Logout user from all devices (delete all refresh tokens)",
+)
+async def logout_all(
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    await auth_service.logout_all_current_user()
+    return MessageResponseSchema(message="Logged out from all devices.")
+
+
+@auth_router.post(
+    "/password-reset/request",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="Request password reset email",
+)
+async def request_password_reset(
+    data: PasswordResetRequestSchema,
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    await auth_service.send_password_reset_email(data.email)
+    return MessageResponseSchema(
+        message="If you are registered, you will receive an email with instructions."
+    )
+
+
+@auth_router.post(
+    "/password-reset/complete",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="Complete password reset using token",
+)
+async def complete_password_reset(
+    data: PasswordResetCompleteRequestSchema,
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    await auth_service.reset_password_by_token(
+        email=data.email,
+        token=data.token,
+        new_password=data.new_password,
+    )
+    return MessageResponseSchema(message="Password reset successfully.")
