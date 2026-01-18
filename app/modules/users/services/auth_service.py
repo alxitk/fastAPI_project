@@ -6,11 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import delete, select
 
 from app.exceptions.exceptions import InvalidCredentialsError, UserNotActiveError, TokenNotFoundError
+from app.modules.users.crud import token as token_crud
 from app.modules.users.models.enums import UserGroupEnum
-from app.modules.users.models.token import RefreshTokenModel, PasswordResetTokenModel
+from app.modules.users.models.token import RefreshTokenModel, PasswordResetTokenModel, ActivationTokenModel
 from app.modules.users.models.user import User, UserGroupModel
+from app.notifications.interfaces import EmailSenderInterface
 from app.utils.interfaces import JWTAuthManagerInterface
-from app.utils.security import verify_password, hash_password, pwd_context
+from app.utils.security import pwd_context
 
 
 class AuthService:
@@ -24,10 +26,14 @@ class AuthService:
         db: AsyncSession,
         jwt_manager: JWTAuthManagerInterface,
         login_time_days: int,
+        email_sender: EmailSenderInterface | None = None,
+        base_url: str = "http://localhost:8000",
     ):
         self._db = db
         self._jwt_manager = jwt_manager
         self._login_time_days = login_time_days
+        self._email_sender = email_sender
+        self._base_url = base_url
 
     async def register_user(self, email: str, password: str) -> User:
         stmt = select(User).where(User.email == email)
@@ -46,20 +52,27 @@ class AuthService:
         new_user = User(
             email=email,
             _hashed_password=hashed_password,
-            is_active=True,
+            is_active=False,
             group_id=user_group.id
         )
 
         self._db.add(new_user)
         await self._db.commit()
         await self._db.refresh(new_user)
+
+        if self._email_sender:
+            activation_token = await token_crud.create_activation_token(self._db, new_user.id)
+            await self._db.commit()
+            activation_link = f"{self._base_url}/auth/activate?email={email}&token={activation_token.token}"
+            await self._email_sender.send_activation_email(email, activation_link)
+
         return new_user
 
 
     async def login(self, email: str, password: str) -> tuple[str, str]:
         user = await self._get_user_by_email(email)
 
-        if not user or not verify_password(password, user.password):
+        if not user or not user.verify_password(password):
             raise InvalidCredentialsError
 
         if not user.is_active:
@@ -113,6 +126,10 @@ class AuthService:
         await self._db.execute(stmt)
         await self._db.commit()
 
+    async def logout_all_current_user(self, user_id: int) -> None:
+        """Logout current user from all devices."""
+        await self.logout_all(user_id)
+
 
     async def reset_password(
         self,
@@ -123,7 +140,10 @@ class AuthService:
         result = await self._db.execute(stmt)
         user = result.scalars().first()
 
-        user.password = hash_password(new_password)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        user.set_password(new_password)
 
         await self._db.execute(
             delete(PasswordResetTokenModel).where(
@@ -158,3 +178,80 @@ class AuthService:
         )
         result = await self._db.execute(stmt)
         return result.scalars().first() is not None
+
+    async def send_password_reset_email(self, email: str) -> None:
+        """Send password reset email to user."""
+        user = await self._get_user_by_email(email)
+        if not user:
+            return
+
+        password_reset_token = await token_crud.create_password_reset_token(self._db, user.id)
+        await self._db.commit()
+
+        if self._email_sender:
+            reset_link = f"{self._base_url}/auth/password-reset/complete?email={email}&token={password_reset_token.token}"
+            await self._email_sender.send_password_reset_email(email, reset_link)
+
+
+    async def reset_password_by_token(
+        self,
+        email: str,
+        token: str,
+        new_password: str,
+    ) -> None:
+        """Reset password using token from email."""
+        user = await self._get_user_by_email(email)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        password_reset_token = await token_crud.get_password_reset_by_token(self._db, token)
+        if not password_reset_token:
+            raise HTTPException(status_code=400, detail="Invalid or expired token")
+
+        if password_reset_token.user_id != user.id:
+            raise HTTPException(status_code=400, detail="Token does not match user")
+
+        if password_reset_token.expires_at < datetime.now(timezone.utc):
+            raise HTTPException(status_code=400, detail="Token has expired")
+
+        user.set_password(new_password)
+
+        await self._db.execute(
+            delete(PasswordResetTokenModel).where(
+                PasswordResetTokenModel.id == password_reset_token.id
+            )
+        )
+        await self._db.commit()
+
+        if self._email_sender:
+            login_link = f"{self._base_url}/auth/login"
+            await self._email_sender.send_password_reset_complete_email(email, login_link)
+
+    async def activate_user(self, email: str, token: str) -> None:
+        """Activate user account using activation token."""
+        user = await self._get_user_by_email(email)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        activation_token = await token_crud.get_by_token(self._db, token)
+        if not activation_token:
+            raise HTTPException(status_code=400, detail="Invalid or expired token")
+
+        if activation_token.user_id != user.id:
+            raise HTTPException(status_code=400, detail="Token does not match user")
+
+        if activation_token.expires_at < datetime.now(timezone.utc):
+            raise HTTPException(status_code=400, detail="Token has expired")
+
+        user.is_active = True
+
+        await self._db.execute(
+            delete(ActivationTokenModel).where(
+                ActivationTokenModel.id == activation_token.id
+            )
+        )
+        await self._db.commit()
+
+        if self._email_sender:
+            login_link = f"{self._base_url}/auth/login"
+            await self._email_sender.send_activation_complete_email(email, login_link)
