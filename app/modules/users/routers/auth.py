@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 
-from app.config.dependencies import get_auth_service
+from app.config.dependencies import get_auth_service, get_current_user_id
 from app.modules.users.schemas.token_schema import TokenRefreshResponseSchema, TokenRefreshRequestSchema
-from app.modules.users.schemas.user_schema import UserLoginResponseSchema, UserLoginRequestSchema, MessageResponseSchema, UserRegistrationRequestSchema
+from app.modules.users.schemas.user_schema import UserLoginResponseSchema, UserLoginRequestSchema, MessageResponseSchema, UserRegistrationRequestSchema, UserActivationRequestSchema
 from app.modules.users.schemas.password_schema import (
     PasswordResetRequestSchema,
     PasswordResetCompleteRequestSchema,
@@ -32,6 +32,8 @@ async def login(
     return UserLoginResponseSchema(
         access_token=access_token,
         refresh_token=refresh_token,
+        token_type="bearer",
+        expires_in=3600,
     )
 
 
@@ -71,7 +73,11 @@ async def refresh_token(
     Refresh access token using a valid refresh token.
     """
     new_access_token = await auth_service.refresh_access_token(data.refresh_token)
-    return TokenRefreshResponseSchema(access_token=new_access_token)
+    return TokenRefreshResponseSchema(
+        access_token=new_access_token,
+        token_type="bearer",
+        expires_in=3600,
+    )
 
 
 @auth_router.post(
@@ -95,10 +101,30 @@ async def logout(
     summary="Logout user from all devices (delete all refresh tokens)",
 )
 async def logout_all(
+    user_id: int = Depends(get_current_user_id),
     auth_service: AuthService = Depends(get_auth_service),
 ):
-    await auth_service.logout_all_current_user()
+    await auth_service.logout_all_current_user(user_id)
     return MessageResponseSchema(message="Logged out from all devices.")
+
+
+@auth_router.post(
+    "/activate",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="Activate user account using activation token",
+)
+async def activate_account(
+    data: UserActivationRequestSchema,
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    """
+    Activate a user account using the activation token from email.
+    """
+    await auth_service.activate_user(data.email, data.token)
+    return MessageResponseSchema(
+        message="Account activated successfully. You can now login."
+    )
 
 
 @auth_router.post(
