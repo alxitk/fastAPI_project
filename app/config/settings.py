@@ -10,6 +10,10 @@ class BaseAppSettings(BaseSettings):
 
     LOGIN_TIME_DAYS: int = 7
 
+    model_config = {
+        "case_sensitive": False,
+    }
+
 
 class Settings(BaseAppSettings):
     POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
