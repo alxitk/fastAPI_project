@@ -41,6 +41,20 @@ services:
       SECRET_KEY_REFRESH: ${SECRET_KEY_REFRESH}
       JWT_SIGNING_ALGORITHM: ${JWT_SIGNING_ALGORITHM:-HS256}
       ENVIRONMENT: ${ENVIRONMENT:-developing}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS}
+    networks:
+      - app-network
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "8025:8025"
+      - "1025:1025"
     networks:
       - app-network
 
