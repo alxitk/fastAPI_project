@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 
 from app.config.dependencies import get_auth_service, get_current_user_id
-from app.modules.users.schemas.token_schema import TokenRefreshResponseSchema, TokenRefreshRequestSchema
+from app.modules.users.schemas.token_schema import TokenRefreshResponseSchema, TokenRefreshRequestSchema, \
+    TokenResendActivationRequestSchema
 from app.modules.users.schemas.user_schema import UserLoginResponseSchema, UserLoginRequestSchema, MessageResponseSchema, UserRegistrationRequestSchema, UserActivationRequestSchema
 from app.modules.users.schemas.password_schema import (
     PasswordResetRequestSchema,
@@ -159,3 +160,9 @@ async def complete_password_reset(
         new_password=data.new_password,
     )
     return MessageResponseSchema(message="Password reset successfully.")
+
+
+@auth_router.post("/resend-activation")
+async def resend_activation(data: TokenResendActivationRequestSchema, auth_service: AuthService = Depends(get_auth_service)):
+    await auth_service.resend_activation_token(data.email)
+    return {"detail": "If your email exists, a new activation link has been sent."}

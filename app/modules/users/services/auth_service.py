@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -255,3 +256,45 @@ class AuthService:
         if self._email_sender:
             login_link = f"{self._base_url}/auth/login"
             await self._email_sender.send_activation_complete_email(email, login_link)
+
+    async def resend_activation_token(self, email: str):
+        user = await self._get_user_by_email(email)
+        if not user or user.is_active:
+            return
+
+        now = datetime.now(timezone.utc)
+
+        result = await self._db.execute(
+            select(ActivationTokenModel)
+            .where(
+                ActivationTokenModel.user_id == user.id,
+                ActivationTokenModel.expires_at > now,
+            )
+            .order_by(ActivationTokenModel.expires_at.desc())
+        )
+        token_obj = result.scalars().first()
+
+        if token_obj:
+            token = token_obj.token
+        else:
+            await self._db.execute(
+                delete(ActivationTokenModel).where(
+                    ActivationTokenModel.user_id == user.id
+                )
+            )
+
+            token = secrets.token_urlsafe(32)
+            new_token = ActivationTokenModel(
+                user_id=user.id,
+                token=token,
+                expires_at=now + timedelta(hours=24),
+            )
+            self._db.add(new_token)
+            await self._db.commit()
+
+        activation_link = (
+            f"{self._base_url}/auth/activate?email={email}&token={token}"
+        )
+
+        if self._email_sender:
+            await self._email_sender.send_activation_email(email, activation_link)
