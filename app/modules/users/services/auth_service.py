@@ -5,6 +5,7 @@ from typing import Optional
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import delete, select
+from starlette import status
 
 from app.exceptions.exceptions import InvalidCredentialsError, UserNotActiveError, TokenNotFoundError
 from app.modules.users.crud import token as token_crud
@@ -13,7 +14,7 @@ from app.modules.users.models.token import RefreshTokenModel, PasswordResetToken
 from app.modules.users.models.user import User, UserGroupModel
 from app.notifications.interfaces import EmailSenderInterface
 from app.utils.interfaces import JWTAuthManagerInterface
-from app.utils.security import pwd_context
+from app.utils.security import pwd_context, hash_password, validate_strong_password, verify_password
 
 
 class AuthService:
@@ -298,3 +299,30 @@ class AuthService:
 
         if self._email_sender:
             await self._email_sender.send_activation_email(email, activation_link)
+
+
+    async def change_password(self, user: User, old_password: str, new_password: str):
+        if not verify_password(old_password, user.hashed_password):
+            raise HTTPException(status_code=400, detail="Old password is incorrect")
+
+        if old_password == new_password:
+            raise HTTPException(status_code=400, detail="New password must be different")
+
+        validate_strong_password(new_password)
+
+        user.hashed_password = hash_password(new_password)
+        await self._db.commit()
+
+    async def _get_user_by_id(self, user_id: int) -> User:
+        result = await self._db.execute(
+            select(User).where(User.id == user_id)
+        )
+        user = result.scalar_one_or_none()
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        return user
