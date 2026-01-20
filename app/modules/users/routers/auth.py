@@ -6,7 +6,7 @@ from app.modules.users.schemas.token_schema import TokenRefreshResponseSchema, T
 from app.modules.users.schemas.user_schema import UserLoginResponseSchema, UserLoginRequestSchema, MessageResponseSchema, UserRegistrationRequestSchema, UserActivationRequestSchema
 from app.modules.users.schemas.password_schema import (
     PasswordResetRequestSchema,
-    PasswordResetCompleteRequestSchema,
+    PasswordResetCompleteRequestSchema, ChangePasswordSchema,
 )
 from app.modules.users.services.auth_service import AuthService
 
@@ -166,3 +166,22 @@ async def complete_password_reset(
 async def resend_activation(data: TokenResendActivationRequestSchema, auth_service: AuthService = Depends(get_auth_service)):
     await auth_service.resend_activation_token(data.email)
     return {"detail": "If your email exists, a new activation link has been sent."}
+
+
+@auth_router.post("/change-password")
+async def change_password(
+        data: ChangePasswordSchema,
+        auth_service: AuthService = Depends(get_auth_service),
+        user_id: int = Depends(get_current_user_id),
+):
+    user = await auth_service._get_user_by_id(user_id)
+
+    await auth_service.change_password(
+        user=user,
+        old_password=data.old_password,
+        new_password=data.new_password,
+    )
+
+    return MessageResponseSchema(
+        message="Password changed successfully."
+    )
