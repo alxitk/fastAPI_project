@@ -20,3 +20,8 @@ class PasswordResetCompleteRequestSchema(BaseModel):
         return validate_strong_password(value)
 
     model_config = {"extra": "forbid"}
+
+
+class ChangePasswordSchema(BaseModel):
+    old_password: str
+    new_password: str
