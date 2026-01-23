@@ -10,6 +10,8 @@ class BaseAppSettings(BaseSettings):
 
     LOGIN_TIME_DAYS: int = 7
 
+    BASE_URL: str = "http://localhost:8000"
+
     model_config = {
         "case_sensitive": False,
     }
