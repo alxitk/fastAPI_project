@@ -8,12 +8,13 @@ from app.exceptions.exceptions import TokenExpiredError
 from app.modules.users.crud import token as token_crud
 from app.modules.users.models.token import PasswordResetTokenModel
 from app.modules.users.models.user import User
+from app.modules.users.services.user_service import UserService
 from app.notifications.interfaces import EmailSenderInterface
 from app.utils.interfaces import JWTAuthManagerInterface
 from app.utils.security import hash_password, validate_strong_password, verify_password
 
 
-class AuthService:
+class PasswordService:
     """
     Authentication service.
     Contains business logic for authentication and token handling.
@@ -22,12 +23,14 @@ class AuthService:
     def __init__(
         self,
         db: AsyncSession,
+        user_service: UserService,
         jwt_manager: JWTAuthManagerInterface,
         login_time_days: int,
         email_sender: EmailSenderInterface | None = None,
         base_url: str = "http://localhost:8000",
     ):
         self._db = db
+        self._user_service = user_service
         self._jwt_manager = jwt_manager
         self._login_time_days = login_time_days
         self._email_sender = email_sender
@@ -41,7 +44,7 @@ class AuthService:
                 new_password: str,
         ) -> None:
             """Reset password using token from email."""
-            user = await self._get_user_by_email(email)
+            user = await self._user_service._get_user_by_email(email)
             if not user:
                 raise HTTPException(status_code=404, detail="User not found")
 
@@ -71,10 +74,11 @@ class AuthService:
 
     async def change_password(
             self,
-            user: User,
+            user_id: int,
             old_password: str,
             new_password: str
     ) -> None:
+            user = await self._user_service._get_user_by_id(user_id)
             if not verify_password(old_password, user.hashed_password):
                 raise HTTPException(status_code=400, detail="Old password is incorrect")
 
@@ -92,7 +96,7 @@ class AuthService:
             email: str
     ) -> None:
         """Send password reset email to user."""
-        user = await self._get_user_by_email(email)
+        user = await self._user_service._get_user_by_email(email)
         if not user:
             return
 

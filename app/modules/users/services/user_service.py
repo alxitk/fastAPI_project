@@ -10,7 +10,7 @@ from app.notifications.interfaces import EmailSenderInterface
 from app.utils.interfaces import JWTAuthManagerInterface
 
 
-class AuthService:
+class UserService:
     """
     Authentication service.
     Contains business logic for authentication and token handling.
@@ -50,3 +50,29 @@ class AuthService:
                 )
 
             return user
+
+
+    async def activate_user_by_admin(self, user_id: int) -> None:
+        user = await self._db.get(User, user_id)
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        if user.is_active:
+            return
+
+        user.is_active = True
+        await self._db.commit()
+
+
+    async def change_user_group(self, user_id: int, group_id: int) -> None:
+        user = await self._db.get(User, user_id)
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
+            )
+
+        user.group_id = group_id
+        await self._db.commit()

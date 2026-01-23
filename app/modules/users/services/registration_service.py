@@ -10,12 +10,13 @@ from app.modules.users.crud import token as token_crud
 from app.modules.users.models.enums import UserGroupEnum
 from app.modules.users.models.token import ActivationTokenModel
 from app.modules.users.models.user import User, UserGroupModel
+from app.modules.users.services.user_service import UserService
 from app.notifications.interfaces import EmailSenderInterface
 from app.utils.interfaces import JWTAuthManagerInterface
 from app.utils.security import pwd_context
 
 
-class AuthService:
+class RegistrationService:
     """
     Authentication service.
     Contains business logic for authentication and token handling.
@@ -26,12 +27,14 @@ class AuthService:
         db: AsyncSession,
         jwt_manager: JWTAuthManagerInterface,
         login_time_days: int,
+        user_service: UserService,
         email_sender: EmailSenderInterface | None = None,
         base_url: str = "http://localhost:8000",
     ):
         self._db = db
         self._jwt_manager = jwt_manager
         self._login_time_days = login_time_days
+        self._user_service = user_service
         self._email_sender = email_sender
         self._base_url = base_url
 
@@ -71,7 +74,7 @@ class AuthService:
 
     async def activate_user(self, email: str, token: str) -> None:
         """Activate user account using activation token."""
-        user = await self._get_user_by_email(email)
+        user = await self._user_service._get_user_by_email(email)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
@@ -100,7 +103,7 @@ class AuthService:
 
 
     async def resend_activation_token(self, email: str):
-        user = await self._get_user_by_email(email)
+        user = await self._user_service._get_user_by_email(email)
         if not user or user.is_active:
             return
 
