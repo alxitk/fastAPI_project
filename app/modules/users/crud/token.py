@@ -2,10 +2,16 @@ from datetime import datetime, timezone
 from sqlalchemy import select, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.users.models.token import ActivationTokenModel, RefreshTokenModel, PasswordResetTokenModel
+from app.modules.users.models.token import (
+    ActivationTokenModel,
+    RefreshTokenModel,
+    PasswordResetTokenModel,
+)
 
 
-async def create_activation_token(db: AsyncSession, user_id: int) -> ActivationTokenModel:
+async def create_activation_token(
+    db: AsyncSession, user_id: int
+) -> ActivationTokenModel:
     """Creates a new activation token for user."""
     token = ActivationTokenModel(user_id=user_id)
     db.add(token)
@@ -61,7 +67,9 @@ async def exists_valid(db: AsyncSession, user_id: int) -> bool:
     return (result.scalar() or 0) > 0
 
 
-async def create_password_reset_token(db: AsyncSession, user_id: int) -> PasswordResetTokenModel:
+async def create_password_reset_token(
+    db: AsyncSession, user_id: int
+) -> PasswordResetTokenModel:
     """Creates a new password reset token for user."""
     token = PasswordResetTokenModel(user_id=user_id)
     db.add(token)
@@ -70,7 +78,9 @@ async def create_password_reset_token(db: AsyncSession, user_id: int) -> Passwor
     return token
 
 
-async def get_password_reset_by_token(db: AsyncSession, token: str) -> PasswordResetTokenModel | None:
+async def get_password_reset_by_token(
+    db: AsyncSession, token: str
+) -> PasswordResetTokenModel | None:
     """Gets password reset token by token string."""
     result = await db.execute(
         select(PasswordResetTokenModel).where(PasswordResetTokenModel.token == token)
@@ -91,7 +101,9 @@ async def is_password_reset_token_valid(db: AsyncSession, token: str) -> bool:
 async def delete_password_reset_by_user_id(db: AsyncSession, user_id: int) -> int:
     """Deletes all password reset tokens for user. Returns count of deleted tokens."""
     result = await db.execute(
-        delete(PasswordResetTokenModel).where(PasswordResetTokenModel.user_id == user_id)
+        delete(PasswordResetTokenModel).where(
+            PasswordResetTokenModel.user_id == user_id
+        )
     )
     return result.rowcount or 0
 
@@ -117,7 +129,9 @@ async def exists_valid_password_reset_token(db: AsyncSession, user_id: int) -> b
     return (result.scalar() or 0) > 0
 
 
-async def create_refresh_token(db: AsyncSession, user_id: int, token: str, expires_at: datetime) -> RefreshTokenModel:
+async def create_refresh_token(
+    db: AsyncSession, user_id: int, token: str, expires_at: datetime
+) -> RefreshTokenModel:
     """Creates a new refresh token for user."""
     refresh = RefreshTokenModel(user_id=user_id, token=token, expires_at=expires_at)
     db.add(refresh)
@@ -126,7 +140,9 @@ async def create_refresh_token(db: AsyncSession, user_id: int, token: str, expir
     return refresh
 
 
-async def get_refresh_token_by_token(db: AsyncSession, token: str) -> RefreshTokenModel | None:
+async def get_refresh_token_by_token(
+    db: AsyncSession, token: str
+) -> RefreshTokenModel | None:
     """Gets refresh token by token string."""
     result = await db.execute(
         select(RefreshTokenModel).where(RefreshTokenModel.token == token)

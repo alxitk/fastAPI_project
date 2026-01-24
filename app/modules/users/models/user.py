@@ -10,13 +10,13 @@ from app.modules.users.models.enums import UserGroupEnum, GenderEnum
 
 
 class UserGroupModel(Base):
-    __tablename__ = 'user_groups'
+    __tablename__ = "user_groups"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[UserGroupEnum] = mapped_column(
         SAEnum(UserGroupEnum, name="user_group_enum", native_enum=False),
         nullable=False,
-        unique=True
+        unique=True,
     )
 
     users: Mapped[list["User"]] = relationship(
@@ -30,21 +30,28 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    email: Mapped[str] = mapped_column(
+        String(255), unique=True, nullable=False, index=True
+    )
     _hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
     )
 
-    # Foreign keys
-    group_id: Mapped[int] = mapped_column(ForeignKey("user_groups.id", ondelete="CASCADE"), nullable=False)
+    group_id: Mapped[int] = mapped_column(
+        ForeignKey("user_groups.id", ondelete="CASCADE"), nullable=False
+    )
 
-    # Relationships
-    group: Mapped["UserGroupModel"] = relationship("UserGroupModel", back_populates="users")
+    group: Mapped["UserGroupModel"] = relationship(
+        "UserGroupModel", back_populates="users"
+    )
 
     activation_tokens: Mapped[list["ActivationTokenModel"]] = relationship(
         "ActivationTokenModel",
@@ -52,10 +59,12 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
-    password_reset_tokens: Mapped[list["PasswordResetTokenModel"]] = relationship(  # ← исправлено
-        "PasswordResetTokenModel",
-        back_populates="user",
-        cascade="all, delete-orphan",
+    password_reset_tokens: Mapped[list["PasswordResetTokenModel"]] = (
+        relationship(  # ← исправлено
+            "PasswordResetTokenModel",
+            back_populates="user",
+            cascade="all, delete-orphan",
+        )
     )
 
     refresh_tokens: Mapped[list["RefreshTokenModel"]] = relationship(
@@ -69,10 +78,9 @@ class User(Base):
         back_populates="user",
         uselist=False,
         cascade="all, delete-orphan",
-        lazy="joined"
+        lazy="joined",
     )
 
-    # Properties for password management
     @property
     def hashed_password(self) -> str:
         """Get hashed password."""
@@ -86,11 +94,13 @@ class User(Base):
     def set_password(self, raw_password: str) -> None:
         """Hash and set password."""
         from app.utils.security import hash_password
+
         self._hashed_password = hash_password(raw_password)
 
     def verify_password(self, raw_password: str) -> bool:
         """Verify password against hash."""
         from app.utils.security import verify_password
+
         return verify_password(raw_password, self._hashed_password)
 
 
@@ -107,17 +117,10 @@ class UserProfileModel(Base):
     date_of_birth: Mapped[Optional[date]] = mapped_column(Date)
     info: Mapped[Optional[str]] = mapped_column(Text)
 
-    # Foreign key
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
-        unique=True
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
     )
 
-    # Relationship
     user: Mapped["User"] = relationship(
-        "User",
-        back_populates="profile",
-        uselist=False,
-        lazy="joined"
+        "User", back_populates="profile", uselist=False, lazy="joined"
     )

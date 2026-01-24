@@ -13,39 +13,41 @@ class TokenBaseModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     token: Mapped[str] = mapped_column(
-        String(64),
-        unique=True,
-        nullable=False,
-        default=generate_secure_token
+        String(64), unique=True, nullable=False, default=generate_secure_token
     )
     expires_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc) + timedelta(days=1)
+        default=lambda: datetime.now(timezone.utc) + timedelta(days=1),
     )
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
 
 
 class ActivationTokenModel(TokenBaseModel):
     __tablename__ = "activation_tokens"
 
-    user: Mapped[User] = relationship("User", back_populates="activation_tokens", lazy="selectin")
+    user: Mapped[User] = relationship(
+        "User", back_populates="activation_tokens", lazy="selectin"
+    )
 
 
 class PasswordResetTokenModel(TokenBaseModel):
     __tablename__ = "password_reset_tokens"
 
-    user: Mapped[User] = relationship("User", back_populates="password_reset_tokens", lazy="selectin")
+    user: Mapped[User] = relationship(
+        "User", back_populates="password_reset_tokens", lazy="selectin"
+    )
 
 
 class RefreshTokenModel(TokenBaseModel):
     __tablename__ = "refresh_tokens"
 
-    user: Mapped[User] = relationship("User", back_populates="refresh_tokens", lazy="selectin")
+    user: Mapped[User] = relationship(
+        "User", back_populates="refresh_tokens", lazy="selectin"
+    )
     token: Mapped[str] = mapped_column(
-        String(512),
-        unique=True,
-        nullable=False,
-        default=generate_secure_token
+        String(512), unique=True, nullable=False, default=generate_secure_token
     )

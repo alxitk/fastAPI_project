@@ -39,6 +39,26 @@ class RegistrationService:
         self._base_url = base_url
 
     async def register_user(self, email: str, password: str) -> User:
+        """
+        Register a new user with default USER group and inactive status.
+
+        This method:
+        - Checks email uniqueness.
+        - Assigns the default USER group.
+        - Hashes the password securely.
+        - Creates an inactive user.
+        - Generates and sends an activation email with a token (if email sender is configured).
+
+        Args:
+            email (str): User email address.
+            password (str): Plain-text password provided by the user.
+
+        Returns:
+            User: Newly created user instance.
+
+        Raises:
+            HTTPException: If user already exists or default group is missing.
+        """
         stmt = select(User).where(User.email == email)
         result = await self._db.execute(stmt)
         existing_user = result.scalars().first()
@@ -56,7 +76,7 @@ class RegistrationService:
             email=email,
             _hashed_password=hashed_password,
             is_active=False,
-            group_id=user_group.id
+            group_id=user_group.id,
         )
 
         self._db.add(new_user)
@@ -64,16 +84,40 @@ class RegistrationService:
         await self._db.refresh(new_user)
 
         if self._email_sender:
-            activation_token = await token_crud.create_activation_token(self._db, new_user.id)
+            activation_token = await token_crud.create_activation_token(
+                self._db, new_user.id
+            )
             await self._db.commit()
             activation_link = f"{self._base_url}/auth/activate?email={email}&token={activation_token.token}"
             await self._email_sender.send_activation_email(email, activation_link)
 
         return new_user
 
-
     async def activate_user(self, email: str, token: str) -> None:
-        """Activate user account using activation token."""
+        """
+        Activate a user account using an activation token.
+
+        This method validates:
+        - User existence.
+        - Token validity and ownership.
+        - Token expiration time.
+
+        After successful validation:
+        - Marks the user as active.
+        - Deletes the activation token.
+        - Sends a confirmation email (if email sender is configured).
+
+        Args:
+            email (str): User email address.
+            token (str): Activation token received via email.
+
+        Returns:
+            None
+
+        Raises:
+            HTTPException: If user or token is invalid.
+            TokenExpiredError: If activation token has expired.
+        """
         user = await self._user_service._get_user_by_email(email)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
@@ -101,9 +145,27 @@ class RegistrationService:
             login_link = f"{self._base_url}/auth/login"
             await self._email_sender.send_activation_complete_email(email, login_link)
 
+    async def resend_activation_token(self, email: str) -> None:
+        """
+        Resend account activation token to the user's email.
 
-    async def resend_activation_token(self, email: str):
+        This method is used when a user did not activate their account
+        within the token expiration time (24 hours). If a valid activation
+        token still exists, it will be reused. Otherwise, a new token is
+        generated and sent.
+
+        The method is idempotent:
+        - If the user does not exist → silently returns.
+        - If the user is already active → silently returns.
+
+        Args:
+            email (str): User email address.
+
+        Returns:
+            None
+        """
         user = await self._user_service._get_user_by_email(email)
+
         if not user or user.is_active:
             return
 
@@ -137,9 +199,8 @@ class RegistrationService:
             self._db.add(new_token)
             await self._db.commit()
 
-        activation_link = (
-            f"{self._base_url}/auth/activate?email={email}&token={token}"
-        )
+
+        activation_link = f"{self._base_url}/auth/activate?email={email}&token={token}"
 
         if self._email_sender:
             await self._email_sender.send_activation_email(email, activation_link)

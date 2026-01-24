@@ -1,6 +1,10 @@
 from fastapi import APIRouter, Depends, status
 
-from app.config.dependencies import get_registration_service, get_user_service, get_current_admin_user
+from app.config.dependencies import (
+    get_registration_service,
+    get_user_service,
+    get_current_admin_user,
+)
 from app.modules.users.schemas.user_schema import (
     UserRegistrationRequestSchema,
     UserActivationRequestSchema,
@@ -47,17 +51,17 @@ async def resend_activation(
     )
 
 
-@reg_router.post("/{user_id}/activate", response_model=MessageResponseSchema,)
+@reg_router.post(
+    "/{user_id}/activate",
+    response_model=MessageResponseSchema,
+)
 async def admin_activate_user(
     user_id: int,
     user_service: UserService = Depends(get_user_service),
     admin=Depends(get_current_admin_user),
 ):
     await user_service.activate_user_by_admin(user_id)
-    return MessageResponseSchema(
-        message="User activated successfully by admin."
-    )
-
+    return MessageResponseSchema(message="User activated successfully by admin.")
 
 
 @reg_router.post(
@@ -74,6 +78,4 @@ async def admin_change_user_group(
         user_id=user_id,
         group_id=group_id,
     )
-    return MessageResponseSchema(
-        message="User group updated successfully."
-    )
+    return MessageResponseSchema(message="User group updated successfully.")

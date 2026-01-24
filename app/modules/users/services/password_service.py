@@ -16,8 +16,13 @@ from app.utils.security import hash_password, validate_strong_password, verify_p
 
 class PasswordService:
     """
-    Authentication service.
-    Contains business logic for authentication and token handling.
+    Password management service.
+
+    Responsible for:
+    - Changing password for authenticated users
+    - Handling password reset flow via email tokens
+    - Validating password strength
+    - Sending password-related notification emails
     """
 
     def __init__(
@@ -36,83 +41,137 @@ class PasswordService:
         self._email_sender = email_sender
         self._base_url = base_url
 
-
     async def reset_password_by_token(
-                self,
-                email: str,
-                token: str,
-                new_password: str,
-        ) -> None:
-            """Reset password using token from email."""
-            user = await self._user_service._get_user_by_email(email)
-            if not user:
-                raise HTTPException(status_code=404, detail="User not found")
+        self,
+        email: str,
+        token: str,
+        new_password: str,
+    ) -> None:
+        """
+        Reset user password using a password reset token.
 
-            password_reset_token = await token_crud.get_password_reset_by_token(self._db, token)
-            if not password_reset_token:
-                raise HTTPException(status_code=400, detail="Invalid or expired token")
+        This method is used when a user forgot their password and follows
+        the reset link sent via email.
 
-            if password_reset_token.user_id != user.id:
-                raise HTTPException(status_code=400, detail="Token does not match user")
+        Args:
+            email (str): User email address.
+            token (str): Password reset token from email.
+            new_password (str): New password to set.
 
-            if password_reset_token.expires_at < datetime.now(timezone.utc):
-                raise TokenExpiredError
+        Raises:
+            HTTPException: If user or token is invalid.
+            TokenExpiredError: If reset token has expired.
+        """
+        # Fetch user from database
+        user = await self._user_service._get_user_by_email(email)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
 
-            user.set_password(new_password)
+        password_reset_token = await token_crud.get_password_reset_by_token(
+            self._db, token
+        )
+        if not password_reset_token:
+            raise HTTPException(status_code=400, detail="Invalid or expired token")
 
-            await self._db.execute(
-                delete(PasswordResetTokenModel).where(
-                    PasswordResetTokenModel.id == password_reset_token.id
-                )
+        if password_reset_token.user_id != user.id:
+            raise HTTPException(status_code=400, detail="Token does not match user")
+
+        if password_reset_token.expires_at < datetime.now(timezone.utc):
+            raise TokenExpiredError
+
+        # Validate password rules
+        user.set_password(new_password)
+
+        # Remove used password reset tokens
+        await self._db.execute(
+            delete(PasswordResetTokenModel).where(
+                PasswordResetTokenModel.id == password_reset_token.id
             )
-            await self._db.commit()
+        )
+        await self._db.commit()
 
-            if self._email_sender:
-                login_link = f"{self._base_url}/auth/login"
-                await self._email_sender.send_password_reset_complete_email(email, login_link)
-
+        if self._email_sender:
+            login_link = f"{self._base_url}/auth/login"
+            await self._email_sender.send_password_reset_complete_email(
+                email, login_link
+            )
 
     async def change_password(
-            self,
-            user_id: int,
-            old_password: str,
-            new_password: str
+        self, user_id: int, old_password: str, new_password: str
     ) -> None:
-            user = await self._user_service._get_user_by_id(user_id)
-            if not verify_password(old_password, user.hashed_password):
-                raise HTTPException(status_code=400, detail="Old password is incorrect")
+        """
+        Change password for an authenticated user.
 
-            if old_password == new_password:
-                raise HTTPException(status_code=400, detail="New password must be different")
+        This method requires the user to provide their current password
+        and a new password. It is intended for logged-in users.
 
-            validate_strong_password(new_password)
+        Args:
+            user_id (int): ID of the authenticated user.
+            old_password (str): Current password.
+            new_password (str): New password.
 
-            user.hashed_password = hash_password(new_password)
-            await self._db.commit()
+        Raises:
+            HTTPException: If old password is incorrect or new password is invalid.
+        """
+        # Fetch user from database
+        user = await self._user_service._get_user_by_id(user_id)
+        if not verify_password(old_password, user.hashed_password):
+            raise HTTPException(status_code=400, detail="Old password is incorrect")
 
+        if old_password == new_password:
+            raise HTTPException(
+                status_code=400, detail="New password must be different"
+            )
 
-    async def send_password_reset_email(
-            self,
-            email: str
-    ) -> None:
-        """Send password reset email to user."""
+        # Validate password rules
+        validate_strong_password(new_password)
+
+        user.hashed_password = hash_password(new_password)
+        await self._db.commit()
+
+    async def send_password_reset_email(self, email: str) -> None:
+        """
+        Send a password reset email to the user.
+
+        If the email does not exist, the method silently returns
+        to avoid leaking user existence.
+
+        Args:
+            email (str): User email address.
+        """
+        # Fetch user from database
         user = await self._user_service._get_user_by_email(email)
         if not user:
             return
 
-        password_reset_token = await token_crud.create_password_reset_token(self._db, user.id)
+        password_reset_token = await token_crud.create_password_reset_token(
+            self._db, user.id
+        )
         await self._db.commit()
 
         if self._email_sender:
             reset_link = f"{self._base_url}/auth/password-reset/complete?email={email}&token={password_reset_token.token}"
             await self._email_sender.send_password_reset_email(email, reset_link)
 
-
     async def reset_password(
         self,
         user_id: int,
         new_password: str,
     ) -> None:
+        """
+        Reset user password by user ID.
+
+        This method is intended for internal/admin usage where password
+        can be reset without old password verification.
+
+        Args:
+            user_id (int): User ID.
+            new_password (str): New password to set.
+
+        Raises:
+            HTTPException: If user is not found.
+        """
+        # Fetch user from database
         stmt = select(User).where(User.id == user_id)
         result = await self._db.execute(stmt)
         user = result.scalars().first()
@@ -120,8 +179,10 @@ class PasswordService:
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
+        # Validate password rules
         user.set_password(new_password)
 
+        # Remove used password reset tokens
         await self._db.execute(
             delete(PasswordResetTokenModel).where(
                 PasswordResetTokenModel.user_id == user_id
