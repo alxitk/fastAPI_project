@@ -1,0 +1,27 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Poetry / virtualenv
+.env
+.venv/
+*.env
+poetry.lock
+
+# Git
+.git/
+.gitignore
+
+# Docker
+docker-compose.override.yml
+Dockerfile.dev
+
+# IDE / editors
+.idea/
+*.iml
+
+# Mac / Linux / Windows system files
+.DS_Store
+Thumbs.db
