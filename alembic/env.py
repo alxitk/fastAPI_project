@@ -15,6 +15,13 @@ from app.modules.users.models.token import (
     RefreshTokenModel
 )
 
+from app.modules.movies.models.movie_models import Movie
+from app.modules.movies.models.movie_models import Genre
+from app.modules.movies.models.movie_models import Star
+from app.modules.movies.models.movie_models import Director
+from app.modules.movies.models.movie_models import Certification
+
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
