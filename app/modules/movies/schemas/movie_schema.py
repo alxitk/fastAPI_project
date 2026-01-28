@@ -65,6 +65,9 @@ class CertificationSchema(BaseModel):
     }
 
 
+class CertificationCreateSchema(BaseModel):
+    name: str
+
 class MovieBaseSchema(BaseModel):
     name: str = Field(..., max_length=255)
     year: int = Field(..., ge=1888)
@@ -125,7 +128,10 @@ class MovieCreateSchema(BaseModel):
     name: str
     year: int
     time: int
+    imdb: float
+    votes: int
     description: str
+    certification: CertificationCreateSchema
     price: Decimal
     genres: list[str]
     stars: list[str]
