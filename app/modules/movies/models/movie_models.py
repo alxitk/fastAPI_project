@@ -1,3 +1,4 @@
+import uuid
 from decimal import Decimal
 
 from sqlalchemy import Integer, String, Float, Text, Numeric, ForeignKey, UniqueConstraint
@@ -67,7 +68,12 @@ class Movie(Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    uuid: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    uuid: Mapped[str] = mapped_column(
+        String,
+        unique=True,
+        nullable=False,
+        default=lambda: str(uuid.uuid4()),
+    )
     name: Mapped[str] = mapped_column(String(64), nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
     time: Mapped[int] = mapped_column(Integer, nullable=False)
