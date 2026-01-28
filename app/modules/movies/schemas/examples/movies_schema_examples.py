@@ -35,3 +35,14 @@ movie_list_response_schema_example = {
     "total_pages": 9933,
     "total_items": 9933
 }
+
+movie_create_schema_example = {
+    "name": "New Movie",
+    "year": 2025,
+    "time": 120,
+    "description": "An amazing movie.",
+    "price": 49.99,
+    "genres": ["Action", "Adventure"],
+    "stars": ["John Doe", "Jane Doe"],
+    "directors": ["John Doe", "Jane Doe"]
+}
