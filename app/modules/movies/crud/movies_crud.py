@@ -1,7 +1,10 @@
+from decimal import Decimal
+from typing import List
+
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.movies.models.movie_models import Movie
+from app.modules.movies.models.movie_models import Movie, Genre, Star, Director, Certification
 
 
 async def count_movies(db: AsyncSession):
@@ -13,3 +16,37 @@ async def get_movies(db: AsyncSession, offset: int = 0, limit: int = 100):
     stmt = select(Movie).offset(offset).limit(limit)
     result = await db.execute(stmt)
     return result.scalars().all()
+
+
+async def create_movie(
+    db: AsyncSession,
+    *,
+    name: str,
+    year: int,
+    time: int,
+    imdb: float,
+    votes: int,
+    description: str,
+    price: Decimal,
+    certification: Certification,
+    genres: List[Genre],
+    stars: List[Star],
+    directors: List[Director],
+):
+
+    movie = Movie(
+        name=name,
+        year=year,
+        time=time,
+        imdb=imdb,
+        votes=votes,
+        description=description,
+        price=price,
+        certification=certification,
+        genres=genres,
+        stars=stars,
+        directors=directors,
+    )
+    db.add(movie)
+    await db.flush()
+    return movie
