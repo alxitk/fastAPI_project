@@ -2,8 +2,12 @@ from fastapi import APIRouter, Query, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.session import get_db
-from app.modules.movies.schemas.movie_schema import MovieListResponseSchema
-from app.modules.movies.services.movie_service import get_movies_list
+from app.modules.movies.schemas.movie_schema import (
+    MovieListResponseSchema,
+    MovieCreateSchema,
+    MovieDetailSchema,
+)
+from app.modules.movies.services.movie_service import MovieService
 
 movies_router = APIRouter(prefix="/cinema", tags=["Movies"])
 
@@ -37,8 +41,8 @@ async def get_movie_list(
 
     offset = (page - 1) * per_page
 
-    movies, total_items = await get_movies_list(
-        db=db,
+    service = MovieService(db)
+    movies, total_items = await service.get_movies_list(
         offset=offset,
         limit=per_page,
     )
@@ -55,3 +59,34 @@ async def get_movie_list(
         total_pages=total_pages,
         total_items=total_items,
     )
+
+
+@movies_router.post(
+    "/movies/",
+    response_model=MovieDetailSchema,
+    summary="Add a new movie",
+    description=(
+            "<h3>This endpoint allows clients to add a new movie to the database.</h3>"
+    ),
+    responses={
+        201: {
+            "description": "Movie created successfully.",
+        },
+        400: {
+            "description": "Invalid input.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Invalid input data."}
+                }
+            },
+        }
+    },
+    status_code=201
+)
+async def create_movie(
+        movie_data: MovieCreateSchema,
+        db: AsyncSession = Depends(get_db)
+) -> MovieDetailSchema:
+    service = MovieService(db)
+    movie = await service.create_movie(movie_data)
+    return movie
