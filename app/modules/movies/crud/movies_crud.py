@@ -28,7 +28,7 @@ async def create_movie(
     votes: int,
     description: str,
     price: Decimal,
-    certification: Certification,
+    certification_id: int,
     genres: List[Genre],
     stars: List[Star],
     directors: List[Director],
@@ -42,7 +42,7 @@ async def create_movie(
         votes=votes,
         description=description,
         price=price,
-        certification=certification,
+        certification_id=certification_id,
         genres=genres,
         stars=stars,
         directors=directors,
@@ -50,3 +50,12 @@ async def create_movie(
     db.add(movie)
     await db.flush()
     return movie
+
+
+async def create_certification(db: AsyncSession, name: str):
+    certification = Certification(name=name)
+    db.add(certification)
+    await db.commit()
+    await db.refresh(certification)
+    return certification
+

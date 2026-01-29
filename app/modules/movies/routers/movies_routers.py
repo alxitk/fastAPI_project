@@ -5,7 +5,7 @@ from app.database.session import get_db
 from app.modules.movies.schemas.movie_schema import (
     MovieListResponseSchema,
     MovieCreateSchema,
-    MovieDetailSchema,
+    MovieDetailSchema, CertificationSchema, CertificationCreateSchema,
 )
 from app.modules.movies.services.movie_service import MovieService
 
@@ -90,3 +90,16 @@ async def create_movie(
     service = MovieService(db)
     movie = await service.create_movie(movie_data)
     return movie
+
+
+@movies_router.post(
+    "/certification/",
+    response_model=CertificationSchema,
+)
+async def create_certification(
+        certification_name: CertificationCreateSchema,
+        db: AsyncSession = Depends(get_db)
+):
+    service = MovieService(db)
+    certification = await service.create_certification(certification_name)
+    return certification

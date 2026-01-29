@@ -131,7 +131,7 @@ class MovieCreateSchema(BaseModel):
     imdb: float
     votes: int
     description: str
-    certification: CertificationCreateSchema
+    certification_id: int
     price: Decimal
     genres: list[str]
     stars: list[str]

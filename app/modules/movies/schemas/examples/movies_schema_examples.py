@@ -43,7 +43,7 @@ movie_create_schema_example = {
     "imdb": 8.8,
     "votes": 124532,
     "description": "An amazing movie.",
-    "certification": { "name": "PG-13" },
+    "certification_id": 12,
     "price": 49.99,
     "genres": ["Action", "Adventure"],
     "stars": ["John Doe", "Jane Doe"],

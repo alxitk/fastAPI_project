@@ -3,9 +3,9 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.movies.crud.movies_crud import count_movies, get_movies, create_movie
+from app.modules.movies.crud.movies_crud import count_movies, get_movies, create_movie, create_certification
 from app.modules.movies.models.movie_models import Movie, Certification, Genre, Star, Director
-from app.modules.movies.schemas.movie_schema import MovieCreateSchema, MovieDetailSchema
+from app.modules.movies.schemas.movie_schema import MovieCreateSchema, MovieDetailSchema, CertificationCreateSchema
 
 
 class MovieService:
@@ -18,6 +18,20 @@ class MovieService:
         self._db = db
         self._base_url = base_url
 
+
+    async def create_certification(self, certification_data: CertificationCreateSchema):
+        stmt = select(Certification).where(Certification.name == certification_data.name)
+        result = await self._db.execute(stmt)
+
+        if result.scalars().first():
+            raise HTTPException(status_code=400, detail="Certification already exists")
+
+        certification = await create_certification(
+            db=self._db,
+            name= certification_data.name,
+        )
+
+        return certification
 
     async def get_movies_list(self, offset, limit):
         movies = await get_movies(self._db, offset, limit)
@@ -34,15 +48,17 @@ class MovieService:
         if result.scalars().first():
             raise HTTPException(status_code=400, detail="Movie already exists")
 
-        stmt = select(Certification).where(
-            Certification.name == movie_data.certification.name
+        cert_stmt = select(Certification).where(
+            Certification.id == movie_data.certification_id
         )
-        result = await self._db.execute(stmt)
-        certification = result.scalars().first()
+        result = await self._db.execute(cert_stmt)
+        certification = result.scalar_one_or_none()
+
         if not certification:
-            certification = Certification(name=movie_data.certification.name)
-            self._db.add(certification)
-            await self._db.flush()
+            raise HTTPException(
+                status_code=400,
+                detail="Certification does not exist"
+            )
 
         genres = []
         for name in movie_data.genres:
@@ -87,7 +103,7 @@ class MovieService:
             votes=movie_data.votes,
             description=movie_data.description,
             price=movie_data.price,
-            certification=certification,
+            certification_id=movie_data.certification_id,
             genres=genres,
             stars=stars,
             directors=directors,
