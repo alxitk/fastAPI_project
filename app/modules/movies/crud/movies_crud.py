@@ -3,8 +3,10 @@ from typing import List
 
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.modules.movies.models.movie_models import Movie, Genre, Star, Director, Certification
+from app.modules.movies.schemas.movie_schema import MovieDetailSchema
 
 
 async def count_movies(db: AsyncSession):
@@ -58,4 +60,17 @@ async def create_certification(db: AsyncSession, name: str):
     await db.commit()
     await db.refresh(certification)
     return certification
+
+
+async def get_movie_detail(db: AsyncSession, movie_id: int):
+    stmt = (select(Movie).options(
+        selectinload(Movie.genres),
+        selectinload(Movie.stars),
+        selectinload(Movie.directors),
+        selectinload(Movie.certification)
+    )
+        .where(Movie.id == movie_id))
+    result = await db.execute(stmt)
+    return result.scalars().first()
+
 

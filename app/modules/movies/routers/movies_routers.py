@@ -103,3 +103,16 @@ async def create_certification(
     service = MovieService(db)
     certification = await service.create_certification(certification_name)
     return certification
+
+
+@movies_router.get(
+    "/movies/{movie_id}/",
+    response_model=MovieDetailSchema,
+)
+async def get_movie(
+        movie_id: int,
+        db: AsyncSession = Depends(get_db)
+):
+    service = MovieService(db)
+    movie = await service.get_movie_by_id(movie_id)
+    return movie

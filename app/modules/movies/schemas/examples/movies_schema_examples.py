@@ -49,3 +49,23 @@ movie_create_schema_example = {
     "stars": ["John Doe", "Jane Doe"],
     "directors": ["John Doe", "Jane Doe"]
 }
+
+movie_detail_schema_example = {
+    "name": "New Movie",
+    "year": 2025,
+    "time": 120,
+    "imdb": 8.8,
+    "votes": 124532,
+    "description": "Some Description",
+    "price": 49.99,
+    "genres": [
+        genre_schema_example
+    ],
+    "stars": [
+        star_schema_example
+    ],
+    "directors": [
+        director_schema_example
+    ],
+    "certification": certification_schema_example
+}

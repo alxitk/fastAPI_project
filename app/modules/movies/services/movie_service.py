@@ -2,8 +2,10 @@ from fastapi import HTTPException
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from app.modules.movies.crud.movies_crud import count_movies, get_movies, create_movie, create_certification
+from app.modules.movies.crud.movies_crud import count_movies, get_movies, create_movie, create_certification, \
+    get_movie_detail
 from app.modules.movies.models.movie_models import Movie, Certification, Genre, Star, Director
 from app.modules.movies.schemas.movie_schema import MovieCreateSchema, MovieDetailSchema, CertificationCreateSchema
 
@@ -113,3 +115,9 @@ class MovieService:
         await self._db.refresh(movie)
 
         return MovieDetailSchema.from_orm(movie)
+
+    async def get_movie_by_id(self, movie_id: int):
+        movie = await get_movie_detail(self._db, movie_id)
+        if not movie:
+            raise HTTPException(status_code=404, detail="Movie not found")
+        return movie

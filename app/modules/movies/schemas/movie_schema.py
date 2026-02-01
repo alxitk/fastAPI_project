@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 from app.modules.movies.schemas.examples.movies_schema_examples import director_schema_example, star_schema_example, \
     genre_schema_example, certification_schema_example, movie_list_response_schema_example, movie_list_item_example, \
-    movie_create_schema_example
+    movie_create_schema_example, movie_detail_schema_example
 
 
 class GenreSchema(BaseModel):
@@ -68,6 +68,7 @@ class CertificationSchema(BaseModel):
 class CertificationCreateSchema(BaseModel):
     name: str
 
+
 class MovieBaseSchema(BaseModel):
     name: str = Field(..., max_length=255)
     year: int = Field(..., ge=1888)
@@ -99,13 +100,20 @@ class MovieListItemSchema(BaseModel):
     }
 
 
-class MovieDetailSchema(MovieListItemSchema):
-    description: str
+class MovieDetailSchema(MovieBaseSchema):
     genres: list[GenreSchema]
     stars: list[StarSchema]
     directors: list[DirectorSchema]
     certification: CertificationSchema | None
 
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "examples": [
+                movie_detail_schema_example
+            ]
+        }
+    }
 
 class MovieListResponseSchema(BaseModel):
     movies: List[MovieListItemSchema]
