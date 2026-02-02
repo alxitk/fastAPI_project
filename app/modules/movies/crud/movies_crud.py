@@ -6,16 +6,54 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.modules.movies.models.movie_models import Movie, Genre, Star, Director, Certification
-from app.modules.movies.schemas.movie_schema import MovieDetailSchema
 
 
-async def count_movies(db: AsyncSession):
-    movies = select(func.count()).select_from(Movie)
-    return await db.scalar(movies)
+async def count_movies(
+    db: AsyncSession,
+    year_from: int | None = None,
+    year_to: int | None = None,
+    imdb: float | None = None
+):
+    stmt = select(func.count()).select_from(Movie)
+
+    if year_from is not None:
+        stmt = stmt.where(Movie.year >= year_from)
+
+    if year_to is not None:
+        stmt = stmt.where(Movie.year <= year_to)
+
+    if imdb is not None:
+        stmt = stmt.where(Movie.imdb >= imdb)
+
+    return await db.scalar(stmt)
 
 
-async def get_movies(db: AsyncSession, offset: int = 0, limit: int = 100):
-    stmt = select(Movie).offset(offset).limit(limit)
+async def get_movies(
+        db: AsyncSession,
+        offset: int = 0,
+        limit: int = 100,
+        year_from: int | None = None,
+        year_to: int | None = None,
+        imdb: int | None = None
+):
+    stmt = select(Movie).options(
+        selectinload(Movie.genres),
+        selectinload(Movie.stars),
+        selectinload(Movie.directors),
+        selectinload(Movie.certification),
+    )
+
+    if year_from is not None:
+        stmt = stmt.where(Movie.year >= year_from)
+
+    if year_to is not None:
+        stmt = stmt.where(Movie.year <= year_to)
+
+    if imdb is not None:
+        stmt = stmt.where(Movie.imdb >= imdb)
+
+    stmt = stmt.offset(offset).limit(limit)
+
     result = await db.execute(stmt)
     return result.scalars().all()
 

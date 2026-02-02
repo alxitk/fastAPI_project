@@ -36,6 +36,9 @@ movies_router = APIRouter(prefix="/cinema", tags=["Movies"])
 async def get_movie_list(
         page: int = Query(1, ge=1, description="Page number (1-based index)"),
         per_page: int = Query(10, ge=1, le=20, description="Number of items per page"),
+        year_from: int | None = Query(None, description="Filter by release year"),
+        year_to: int | None = Query(None, description="Filter by release year"),
+        imdb: float | None = Query(None, ge=0, le=10, description="Filter by minimum IMDb rating"),
         db: AsyncSession = Depends(get_db),
 ) -> MovieListResponseSchema:
 
@@ -45,12 +48,13 @@ async def get_movie_list(
     movies, total_items = await service.get_movies_list(
         offset=offset,
         limit=per_page,
+        year_from=year_from,
+        year_to=year_to,
+        imdb=imdb
     )
 
     total_pages = (total_items + per_page - 1) // per_page
 
-    if not movies:
-        raise HTTPException(status_code=404, detail="No movies found.")
 
     return MovieListResponseSchema(
         movies=movies,

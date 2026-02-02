@@ -2,7 +2,6 @@ from fastapi import HTTPException
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.modules.movies.crud.movies_crud import count_movies, get_movies, create_movie, create_certification, \
     get_movie_detail
@@ -35,9 +34,25 @@ class MovieService:
 
         return certification
 
-    async def get_movies_list(self, offset, limit):
-        movies = await get_movies(self._db, offset, limit)
-        total = await count_movies(self._db)
+    async def get_movies_list(
+            self,
+            offset: int = 0,
+            limit: int = 100,
+            year_from: int | None = None,
+            year_to: int | None = None,
+            imdb: float | None = None,
+    ):
+        movies = await get_movies(
+            db=self._db,
+            offset=offset,
+            limit=limit,
+            year_from=year_from,
+            year_to=year_to,
+            imdb=imdb,
+        )
+        total = await count_movies(
+            self._db, year_from=year_from, year_to=year_to, imdb=imdb
+        )
         return movies, total
 
     async def create_movie(self, movie_data: MovieCreateSchema):
