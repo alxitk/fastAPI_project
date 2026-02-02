@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.dependencies import get_current_user
 from app.database.session import get_db
 from app.modules.movies.schemas.movie_schema import (
     MovieListResponseSchema,
@@ -8,6 +9,7 @@ from app.modules.movies.schemas.movie_schema import (
     MovieDetailSchema, CertificationSchema, CertificationCreateSchema,
 )
 from app.modules.movies.services.movie_service import MovieService
+from app.modules.users.models.user import User
 
 movies_router = APIRouter(prefix="/cinema", tags=["Movies"])
 
@@ -126,3 +128,15 @@ async def get_movie(
     service = MovieService(db)
     movie = await service.get_movie_by_id(movie_id)
     return movie
+
+
+@movies_router.post("/movies/{movie_id}/like")
+async def like_movie(
+    movie_id: int,
+    like: bool = True,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    service = MovieService(db)
+    movie_like = await service.like_movie(current_user.id, movie_id, like)
+    return {"movie_id": movie_id, "value": movie_like.value}

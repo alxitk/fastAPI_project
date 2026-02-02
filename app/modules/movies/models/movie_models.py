@@ -109,3 +109,16 @@ class Movie(Base):
         back_populates="movies",
         lazy="selectin",
     )
+
+
+class MovieLike(Base):
+    __tablename__ = "movie_likes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    movie_id: Mapped[int] = mapped_column(ForeignKey("movies.id"))
+    value: Mapped[int] = mapped_column(default=1) # 1 = like, -1 = dislike
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "movie_id", name="uq_user_movie_like"),
+    )

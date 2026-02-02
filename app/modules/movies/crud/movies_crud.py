@@ -6,7 +6,7 @@ from sqlalchemy import select, func, desc, asc, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.modules.movies.models.movie_models import Movie, Genre, Star, Director, Certification
+from app.modules.movies.models.movie_models import Movie, Genre, Star, Director, Certification, MovieLike
 
 
 async def count_movies(
@@ -47,15 +47,15 @@ async def count_movies(
 
 
 async def get_movies(
-        db: AsyncSession,
-        offset: int = 0,
-        limit: int = 100,
-        year_from: int | None = None,
-        year_to: int | None = None,
-        imdb: int | None = None,
-        sort_by: str | None = None,
-        order: str = "asc",
-        search: str | None = None,
+    db: AsyncSession,
+    offset: int = 0,
+    limit: int = 100,
+    year_from: int | None = None,
+    year_to: int | None = None,
+    imdb: int | None = None,
+    sort_by: str | None = None,
+    order: str = "asc",
+    search: str | None = None,
 
 ):
     stmt = (
@@ -161,3 +161,26 @@ async def get_movie_detail(db: AsyncSession, movie_id: int):
     return result.scalars().first()
 
 
+
+async def add_movie_like(
+    db: AsyncSession,
+    user_id: int,
+    movie_id: int,
+    value: int
+):
+    stmt = select(MovieLike).where(
+        MovieLike.user_id == user_id,
+        MovieLike.movie_id == movie_id
+    )
+    result = await db.execute(stmt)
+    like = result.scalars().first()
+
+    if like:
+        like.value = value
+    else:
+        like = MovieLike(user_id=user_id, movie_id=movie_id, value=value)
+        db.add(like)
+
+    await db.commit()
+    await db.refresh(like)
+    return like

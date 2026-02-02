@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.movies.crud.movies_crud import count_movies, get_movies, create_movie, create_certification, \
-    get_movie_detail
+    get_movie_detail, add_movie_like
 from app.modules.movies.models.movie_models import Movie, Certification, Genre, Star, Director
 from app.modules.movies.schemas.movie_schema import MovieCreateSchema, MovieDetailSchema, CertificationCreateSchema
 
@@ -146,3 +146,7 @@ class MovieService:
         if not movie:
             raise HTTPException(status_code=404, detail="Movie not found")
         return movie
+
+    async def like_movie(self, user_id: int, movie_id: int, like: bool):
+        value = 1 if like else -1
+        return await add_movie_like(self._db, user_id, movie_id, value)
