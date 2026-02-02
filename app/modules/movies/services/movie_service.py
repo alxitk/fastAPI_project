@@ -43,6 +43,7 @@ class MovieService:
             imdb: float | None = None,
             sort_by: str | None = None,
             order: str = "asc",
+            search: str | None = None,
     ):
         movies = await get_movies(
             db=self._db,
@@ -53,9 +54,14 @@ class MovieService:
             imdb=imdb,
             sort_by=sort_by,
             order=order,
+            search=search,
         )
         total = await count_movies(
-            self._db, year_from=year_from, year_to=year_to, imdb=imdb
+            self._db,
+            year_from=year_from,
+            year_to=year_to,
+            imdb=imdb,
+            search=search,
         )
         return movies, total
 

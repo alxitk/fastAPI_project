@@ -1,7 +1,8 @@
 from decimal import Decimal
+from re import search
 from typing import List
 
-from sqlalchemy import select, func, desc, asc
+from sqlalchemy import select, func, desc, asc, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -12,9 +13,15 @@ async def count_movies(
     db: AsyncSession,
     year_from: int | None = None,
     year_to: int | None = None,
-    imdb: float | None = None
+    imdb: float | None = None,
+    search: str | None = None
 ):
-    stmt = select(func.count()).select_from(Movie)
+    stmt = (
+        select(func.count(func.distinct(Movie.id)))
+        .select_from(Movie)
+        .outerjoin(Movie.stars)
+        .outerjoin(Movie.directors)
+    )
 
     if year_from is not None:
         stmt = stmt.where(Movie.year >= year_from)
@@ -24,7 +31,18 @@ async def count_movies(
 
     if imdb is not None:
         stmt = stmt.where(Movie.imdb >= imdb)
-
+    
+    if search:
+        pattern = f"%{search}%"
+        stmt = stmt.where(
+            or_(
+                Movie.name.ilike(pattern),
+                Movie.description.ilike(pattern),
+                Star.name.ilike(pattern),
+                Director.name.ilike(pattern),
+            )
+        )
+    
     return await db.scalar(stmt)
 
 
@@ -37,13 +55,20 @@ async def get_movies(
         imdb: int | None = None,
         sort_by: str | None = None,
         order: str = "asc",
+        search: str | None = None,
 
 ):
-    stmt = select(Movie).options(
-        selectinload(Movie.genres),
-        selectinload(Movie.stars),
-        selectinload(Movie.directors),
-        selectinload(Movie.certification),
+    stmt = (
+        select(Movie)
+        .distinct()
+        .options(
+            selectinload(Movie.genres),
+            selectinload(Movie.stars),
+            selectinload(Movie.directors),
+            selectinload(Movie.certification),
+        )
+        .outerjoin(Movie.stars)
+        .outerjoin(Movie.directors)
     )
 
     if year_from is not None:
@@ -54,6 +79,15 @@ async def get_movies(
 
     if imdb is not None:
         stmt = stmt.where(Movie.imdb >= imdb)
+
+    if search:
+        pattern = f"%{search}%"
+        stmt = stmt.where(or_(
+            Movie.name.ilike(pattern),
+            Movie.description.ilike(pattern),
+            Star.name.ilike(pattern),
+            Director.name.ilike(pattern),
+        ))
 
     sort_map = {
         "price": Movie.price,
