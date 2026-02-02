@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import List
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, desc, asc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -34,7 +34,10 @@ async def get_movies(
         limit: int = 100,
         year_from: int | None = None,
         year_to: int | None = None,
-        imdb: int | None = None
+        imdb: int | None = None,
+        sort_by: str | None = None,
+        order: str = "asc",
+
 ):
     stmt = select(Movie).options(
         selectinload(Movie.genres),
@@ -51,6 +54,18 @@ async def get_movies(
 
     if imdb is not None:
         stmt = stmt.where(Movie.imdb >= imdb)
+
+    sort_map = {
+        "price": Movie.price,
+        "year": Movie.year,
+        "imdb": Movie.imdb,
+    }
+    if sort_by:
+        column = sort_map.get(sort_by)
+        if column:
+            stmt = stmt.order_by(
+                desc(column) if order == "desc" else asc(column),
+            )
 
     stmt = stmt.offset(offset).limit(limit)
 

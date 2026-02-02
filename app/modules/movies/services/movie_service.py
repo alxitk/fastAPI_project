@@ -41,6 +41,8 @@ class MovieService:
             year_from: int | None = None,
             year_to: int | None = None,
             imdb: float | None = None,
+            sort_by: str | None = None,
+            order: str = "asc",
     ):
         movies = await get_movies(
             db=self._db,
@@ -49,6 +51,8 @@ class MovieService:
             year_from=year_from,
             year_to=year_to,
             imdb=imdb,
+            sort_by=sort_by,
+            order=order,
         )
         total = await count_movies(
             self._db, year_from=year_from, year_to=year_to, imdb=imdb

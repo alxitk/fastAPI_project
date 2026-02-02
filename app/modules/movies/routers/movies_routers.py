@@ -39,6 +39,8 @@ async def get_movie_list(
         year_from: int | None = Query(None, description="Filter by release year"),
         year_to: int | None = Query(None, description="Filter by release year"),
         imdb: float | None = Query(None, ge=0, le=10, description="Filter by minimum IMDb rating"),
+        sort_by: str | None = Query(None, enum=["price", "year", "imdb"]),
+        order: str = Query("asc", enum=["asc", "desc"]),
         db: AsyncSession = Depends(get_db),
 ) -> MovieListResponseSchema:
 
@@ -50,7 +52,9 @@ async def get_movie_list(
         limit=per_page,
         year_from=year_from,
         year_to=year_to,
-        imdb=imdb
+        imdb=imdb,
+        sort_by=sort_by,
+        order=order,
     )
 
     total_pages = (total_items + per_page - 1) // per_page
