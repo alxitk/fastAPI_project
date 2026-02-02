@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.movies.crud.movies_crud import count_movies, get_movies, create_movie, create_certification, \
-    get_movie_detail, add_movie_like
+    get_movie_detail, add_movie_like, get_favorite, create_favorite, delete_favorite, list_favorites
 from app.modules.movies.models.movie_models import Movie, Certification, Genre, Star, Director
 from app.modules.movies.schemas.movie_schema import MovieCreateSchema, MovieDetailSchema, CertificationCreateSchema
 
@@ -150,3 +150,37 @@ class MovieService:
     async def like_movie(self, user_id: int, movie_id: int, like: bool):
         value = 1 if like else -1
         return await add_movie_like(self._db, user_id, movie_id, value)
+
+    async def add_to_favorites(self, user_id: int, movie_id: int):
+        exists = await get_favorite(self._db, user_id, movie_id)
+        if exists:
+            return exists
+        return await create_favorite(self._db, user_id, movie_id)
+
+    async def remove_from_favorites(self, user_id: int, movie_id: int):
+        return await delete_favorite(self._db, user_id, movie_id)
+
+    async def get_favorites(
+            self,
+            user_id: int,
+            offset: int = 0,
+            limit: int = 100,
+            year_from: int | None = None,
+            year_to: int | None = None,
+            imdb: float | None = None,
+            sort_by: str | None = None,
+            order: str = "asc",
+            search: str | None = None,
+    ):
+        return await list_favorites(
+            self._db,
+            user_id,
+            offset=offset,
+            limit=limit,
+            year_from=year_from,
+            year_to=year_to,
+            imdb=imdb,
+            sort_by=sort_by,
+            order=order,
+            search=search,
+        )

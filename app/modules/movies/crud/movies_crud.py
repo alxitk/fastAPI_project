@@ -6,7 +6,8 @@ from sqlalchemy import select, func, desc, asc, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.modules.movies.models.movie_models import Movie, Genre, Star, Director, Certification, MovieLike
+from app.modules.movies.models.movie_models import Movie, Genre, Star, Director, Certification, MovieLike, \
+    MovieFavorites
 
 
 async def count_movies(
@@ -161,7 +162,6 @@ async def get_movie_detail(db: AsyncSession, movie_id: int):
     return result.scalars().first()
 
 
-
 async def add_movie_like(
     db: AsyncSession,
     user_id: int,
@@ -184,3 +184,92 @@ async def add_movie_like(
     await db.commit()
     await db.refresh(like)
     return like
+
+
+async def get_favorite(db: AsyncSession, user_id: int, movie_id: int):
+    stmt = select(MovieFavorites).where(
+        MovieFavorites.user_id == user_id,
+        MovieFavorites.movie_id == movie_id
+    )
+    result = await db.execute(stmt)
+    return result.scalar_one_or_none()
+
+
+async def create_favorite(db: AsyncSession, user_id: int, movie_id: int):
+    fav = MovieFavorites(user_id=user_id, movie_id=movie_id)
+    db.add(fav)
+    await db.commit()
+    await db.refresh(fav)
+    return fav
+
+
+async def delete_favorite(db: AsyncSession, user_id: int, movie_id: int):
+    stmt = select(MovieFavorites).where(
+        MovieFavorites.user_id == user_id,
+        MovieFavorites.movie_id == movie_id
+    )
+    result = await db.execute(stmt)
+    favorite = result.scalar_one_or_none()
+    if favorite:
+        await db.delete(favorite)
+        await db.commit()
+    return favorite
+
+
+async def list_favorites(
+        db: AsyncSession,
+        user_id: int,
+        offset: int = 0,
+        limit: int = 100,
+        year_from: int | None = None,
+        year_to: int | None = None,
+        imdb: int | None = None,
+        sort_by: str | None = None,
+        order: str = "asc",
+        search: str | None = None,
+):
+    stmt = (
+        select(Movie)
+        .join(MovieFavorites, Movie.id == MovieFavorites.movie_id)
+        .where(MovieFavorites.user_id == user_id)
+        .options(
+            selectinload(Movie.genres),
+            selectinload(Movie.stars),
+            selectinload(Movie.directors),
+            selectinload(Movie.certification),
+        )
+        .distinct()
+    )
+
+    if year_from is not None:
+        stmt = stmt.where(Movie.year >= year_from)
+    if year_to is not None:
+        stmt = stmt.where(Movie.year <= year_to)
+    if imdb is not None:
+        stmt = stmt.where(Movie.imdb >= imdb)
+
+    if search:
+        pattern = f"%{search}%"
+        stmt = stmt.where(
+            or_(
+                Movie.name.ilike(pattern),
+                Movie.description.ilike(pattern),
+                Star.name.ilike(pattern),
+                Director.name.ilike(pattern),
+            )
+        )
+
+    sort_map = {
+        "price": Movie.price,
+        "year": Movie.year,
+        "imdb": Movie.imdb,
+    }
+
+    if sort_by in sort_map:
+        column = sort_map[sort_by]
+        stmt = stmt.order_by(desc(column) if order == "desc" else asc(column))
+
+    stmt = stmt.offset(offset).limit(limit)
+
+    result = await db.execute(stmt)
+    return result.scalars().all()

@@ -83,6 +83,8 @@ class Movie(Base):
     gross: Mapped[float] = mapped_column(Float, nullable=True)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    likes = relationship("MovieLike", back_populates="movie")
+    favorites = relationship("MovieFavorites", back_populates="movie")
 
     certification: Mapped[Certification] = relationship(
         "Certification",
@@ -119,6 +121,22 @@ class MovieLike(Base):
     movie_id: Mapped[int] = mapped_column(ForeignKey("movies.id"))
     value: Mapped[int] = mapped_column(default=1) # 1 = like, -1 = dislike
 
+    user = relationship("User", back_populates="likes")
+    movie = relationship("Movie", back_populates="likes")
+
     __table_args__ = (
         UniqueConstraint("user_id", "movie_id", name="uq_user_movie_like"),
     )
+
+
+class MovieFavorites(Base):
+    __tablename__ = "movie_favorites"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    movie_id: Mapped[int] = mapped_column(ForeignKey("movies.id"))
+
+    user = relationship("User", back_populates="favorites")
+    movie = relationship("Movie", back_populates="favorites")
+
+    __table_args__ = (UniqueConstraint('user_id', 'movie_id', name='uq_user_favorite'),)

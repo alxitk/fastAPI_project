@@ -140,3 +140,53 @@ async def like_movie(
     service = MovieService(db)
     movie_like = await service.like_movie(current_user.id, movie_id, like)
     return {"movie_id": movie_id, "value": movie_like.value}
+
+
+@movies_router.post("/movies/{movie_id}/favorite")
+async def add_favorite(
+    movie_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    service = MovieService(db)
+    favorite = await service.add_to_favorites(current_user.id, movie_id)
+    return favorite
+
+
+@movies_router.delete("/movies/{movie_id}/favorite")
+async def remove_favorite(
+    movie_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    service = MovieService(db)
+    favorite = await service.remove_from_favorites(current_user.id, movie_id)
+    return favorite
+
+
+@movies_router.get("/movies/favorites")
+async def list_favorites(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    year_from: int | None = Query(None),
+    year_to: int | None = Query(None),
+    imdb: float | None = Query(None, ge=0, le=10),
+    sort_by: str | None = Query(None, regex="^(price|year|imdb)$"),
+    order: str = Query("asc", regex="^(asc|desc)$"),
+    search: str | None = Query(None),
+):
+    service = MovieService(db)
+    favorites = await service.get_favorites(
+        user_id=current_user.id,
+        offset=offset,
+        limit=limit,
+        year_from=year_from,
+        year_to=year_to,
+        imdb=imdb,
+        sort_by=sort_by,
+        order=order,
+        search=search,
+    )
+    return favorites
