@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from app.modules.movies.models.associations import movie_genres
 from app.modules.movies.models.movie_models import Movie, Genre, Star, Director, Certification, MovieLike, \
     MovieFavorites, MovieComment
+from app.modules.movies.schemas.movie_schema import MovieUpdateSchema
 
 
 async def count_movies(
@@ -140,6 +141,72 @@ async def create_movie(
     db.add(movie)
     await db.flush()
     return movie
+
+
+async def update_movie(
+        db: AsyncSession,
+        movie_id: int,
+        movie_data: MovieUpdateSchema
+):
+    stmt = (
+        select(Movie)
+        .where(Movie.id == movie_id)
+        .options(
+            selectinload(Movie.genres),
+            selectinload(Movie.stars),
+            selectinload(Movie.directors),
+        )
+    )
+    result = await db.execute(stmt)
+    movie = result.scalar_one_or_none()
+
+    if not movie:
+        return None
+
+    for field, value in movie_data.model_dump(exclude_unset=True).items():
+        if field not in ("genres", "stars", "directors"):
+            setattr(movie, field, value)
+
+    if movie_data.genres is not None:
+        movie.genres.clear()
+        for name in movie_data.genres:
+            result = await db.execute(select(Genre).where(Genre.name == name))
+            genre = result.scalar_one_or_none()
+            if not genre:
+                genre = Genre(name=name)
+                db.add(genre)
+                await db.flush()
+            movie.genres.append(genre)
+
+    if movie_data.stars is not None:
+        movie.stars.clear()
+        for name in movie_data.stars:
+            result = await db.execute(select(Star).where(Star.name == name))
+            star = result.scalar_one_or_none()
+            if not star:
+                star = Star(name=name)
+                db.add(star)
+                await db.flush()
+            movie.stars.append(star)
+
+    if movie_data.directors is not None:
+        movie.directors.clear()
+        for name in movie_data.directors:
+            result = await db.execute(select(Director).where(Director.name == name))
+            director = result.scalar_one_or_none()
+            if not director:
+                director = Director(name=name)
+                db.add(director)
+                await db.flush()
+            movie.directors.append(director)
+
+    await db.commit()
+    await db.refresh(movie)
+    return movie
+
+
+async def delete_movie(db: AsyncSession, movie_id: int):
+    return {"detail": "Deletion disabled until purchases are implemented"}
 
 
 async def create_certification(db: AsyncSession, name: str):

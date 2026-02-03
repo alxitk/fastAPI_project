@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Query, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config.dependencies import get_current_user
+from app.config.dependencies import get_current_user, get_current_moderator_user
 from app.database.session import get_db
 from app.modules.movies.schemas.movie_schema import (
     MovieListResponseSchema,
     MovieCreateSchema,
-    MovieDetailSchema, CertificationSchema, CertificationCreateSchema, GenreWithCountSchema,
+    MovieDetailSchema, CertificationSchema, CertificationCreateSchema, GenreWithCountSchema, MovieUpdateSchema,
 )
 from app.modules.movies.services.movie_service import MovieService
 from app.modules.users.models.user import User
@@ -102,6 +102,16 @@ async def create_movie(
     service = MovieService(db)
     movie = await service.create_movie(movie_data)
     return movie
+
+
+@movies_router.put("/movies/{movie_id}", dependencies=[Depends(get_current_moderator_user)])
+async def update_movie_endpoint(
+    movie_id: int,
+    data: MovieUpdateSchema,
+    db: AsyncSession = Depends(get_db),
+):
+    service = MovieService(db)
+    return await service.update_movie(movie_id, data)
 
 
 @movies_router.post(

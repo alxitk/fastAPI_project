@@ -171,6 +171,21 @@ class MovieCreateSchema(BaseModel):
     }
 
 
+class MovieUpdateSchema(BaseModel):
+    name: Optional[str] = None
+    year: Optional[int] = None
+    time: Optional[int] = None
+    imdb: Optional[float] = None
+    votes: Optional[int] = None
+    description: Optional[str] = None
+    certification_id: Optional[int] = None
+    price: Optional[Decimal] = None
+
+    genres: Optional[list[str]] = None
+    stars: Optional[list[str]] = None
+    directors: Optional[list[str]] = None
+
+
 class GenreWithCountSchema(BaseModel):
     id: int
     name: str

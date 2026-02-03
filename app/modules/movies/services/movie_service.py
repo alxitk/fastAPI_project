@@ -7,9 +7,10 @@ from sqlalchemy.orm import selectinload
 from app.config.dependencies import get_email_sender
 from app.modules.movies.crud.movies_crud import count_movies, get_movies, create_movie, create_certification, \
     add_movie_like, get_favorite, create_favorite, delete_favorite, list_favorites, create_comment, \
-    list_genres_with_count, get_movies_by_genre, get_movie_detail
+    list_genres_with_count, get_movies_by_genre, get_movie_detail, update_movie
 from app.modules.movies.models.movie_models import Movie, Certification, Genre, Star, Director, MovieComment
-from app.modules.movies.schemas.movie_schema import MovieCreateSchema, MovieDetailSchema, CertificationCreateSchema
+from app.modules.movies.schemas.movie_schema import MovieCreateSchema, MovieDetailSchema, CertificationCreateSchema, \
+    MovieUpdateSchema
 from app.modules.movies.services.comment_notification_service import CommentNotificationService
 
 
@@ -144,6 +145,12 @@ class MovieService:
         await self._db.refresh(movie)
 
         return MovieDetailSchema.from_orm(movie)
+
+    async def update_movie(self, movie_id: int, data: MovieUpdateSchema):
+        movie = await update_movie(self._db, movie_id, data)
+        if not movie:
+            raise HTTPException(status_code=404, detail="Movie not found")
+        return movie
 
     async def get_movie_by_id(self, movie_id: int):
         movie = await get_movie_detail(self._db, movie_id)

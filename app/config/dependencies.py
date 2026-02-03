@@ -1,5 +1,6 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.settings import BaseAppSettings
@@ -60,7 +61,6 @@ async def get_current_user(
     """
     Get current user from database.
     """
-    from sqlalchemy import select
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if user is None:
@@ -68,6 +68,12 @@ async def get_current_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
+    return user
+
+
+def get_current_moderator_user(user=Depends(get_current_user)):
+    if user.group_id != 2:
+        raise HTTPException(status_code=403, detail="Moderator access required")
     return user
 
 
