@@ -169,3 +169,13 @@ class MovieCreateSchema(BaseModel):
             ]
         }
     }
+
+
+class GenreWithCountSchema(BaseModel):
+    id: int
+    name: str
+    movie_count: int
+
+    model_config = {
+        "from_attributes": True
+    }

@@ -6,7 +6,7 @@ from app.database.session import get_db
 from app.modules.movies.schemas.movie_schema import (
     MovieListResponseSchema,
     MovieCreateSchema,
-    MovieDetailSchema, CertificationSchema, CertificationCreateSchema,
+    MovieDetailSchema, CertificationSchema, CertificationCreateSchema, GenreWithCountSchema,
 )
 from app.modules.movies.services.movie_service import MovieService
 from app.modules.users.models.user import User
@@ -173,8 +173,8 @@ async def list_favorites(
     year_from: int | None = Query(None),
     year_to: int | None = Query(None),
     imdb: float | None = Query(None, ge=0, le=10),
-    sort_by: str | None = Query(None, regex="^(price|year|imdb)$"),
-    order: str = Query("asc", regex="^(asc|desc)$"),
+    sort_by: str | None = Query(None, pattern="^(price|year|imdb)$"),
+    order: str = Query("asc", pattern="^(asc|desc)$"),
     search: str | None = Query(None),
 ):
     service = MovieService(db)
@@ -207,3 +207,26 @@ async def add_comment(
         text=text,
         parent_id=parent_id,
     )
+
+
+@movies_router.get(
+    "/genres/",
+    response_model=list[GenreWithCountSchema],
+    summary="Genres list",
+)
+async def list_genres(db: AsyncSession = Depends(get_db)):
+    service = MovieService(db)
+    return await service.list_genres()
+
+
+@movies_router.get("/genres/{genre_id}/movies")
+async def movies_by_genre(
+    genre_id: int,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(10, ge=1, le=20),
+    db: AsyncSession = Depends(get_db)
+):
+    service = MovieService(db)
+    offset = (page - 1) * per_page
+    movies = await service.get_movies_by_genre(genre_id, offset, per_page)
+    return movies

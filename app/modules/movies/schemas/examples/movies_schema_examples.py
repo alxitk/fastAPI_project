@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 genre_schema_example = {
     "id": 1,
     "genre": "Comedy"
@@ -67,5 +69,14 @@ movie_detail_schema_example = {
     "directors": [
         director_schema_example
     ],
-    "certification": certification_schema_example
+    "certification": certification_schema_example,
+    "comments": [
+        {
+            "id": 1,
+            "text": "Some text",
+            "user_id": 2,
+            "parent_id": None,
+            "created_at": "2025-01-15T10:30:00",
+        }
+    ]
 }

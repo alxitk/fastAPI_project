@@ -4,7 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.movies.crud.movies_crud import count_movies, get_movies, create_movie, create_certification, \
-    get_movie_detail, add_movie_like, get_favorite, create_favorite, delete_favorite, list_favorites, create_comment
+    get_movie_detail, add_movie_like, get_favorite, create_favorite, delete_favorite, list_favorites, create_comment, \
+    list_genres_with_count, get_movies_by_genre
 from app.modules.movies.models.movie_models import Movie, Certification, Genre, Star, Director
 from app.modules.movies.schemas.movie_schema import MovieCreateSchema, MovieDetailSchema, CertificationCreateSchema
 
@@ -148,10 +149,16 @@ class MovieService:
         return movie
 
     async def like_movie(self, user_id: int, movie_id: int, like: bool):
+        movie = await get_movie_detail(self._db, movie_id)
+        if not movie:
+            raise HTTPException(status_code=404, detail="Movie not found")
         value = 1 if like else -1
         return await add_movie_like(self._db, user_id, movie_id, value)
 
     async def add_to_favorites(self, user_id: int, movie_id: int):
+        movie = await get_movie_detail(self._db, movie_id)
+        if not movie:
+            raise HTTPException(status_code=404, detail="Movie not found")
         exists = await get_favorite(self._db, user_id, movie_id)
         if exists:
             return exists
@@ -193,6 +200,10 @@ class MovieService:
         text: str,
         parent_id: int | None = None,
     ):
+        movie = await get_movie_detail(self._db, movie_id)
+        if not movie:
+            raise HTTPException(status_code=404, detail="Movie not found")
+
         return await create_comment(
             self._db,
             user_id=user_id,
@@ -200,3 +211,11 @@ class MovieService:
             text=text,
             parent_id=parent_id,
         )
+
+
+    async def list_genres(self):
+        return await list_genres_with_count(self._db)
+
+
+    async def get_movies_by_genre(self, genre_id: int, offset: int = 0, limit: int = 20):
+        return await get_movies_by_genre(self._db, genre_id, offset, limit)

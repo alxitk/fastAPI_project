@@ -1,11 +1,11 @@
 from decimal import Decimal
-from re import search
 from typing import List
 
 from sqlalchemy import select, func, desc, asc, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.modules.movies.models.associations import movie_genres
 from app.modules.movies.models.movie_models import Movie, Genre, Star, Director, Certification, MovieLike, \
     MovieFavorites, MovieComment
 
@@ -238,6 +238,8 @@ async def list_favorites(
         select(Movie)
         .join(MovieFavorites, Movie.id == MovieFavorites.movie_id)
         .where(MovieFavorites.user_id == user_id)
+        .outerjoin(Movie.stars)
+        .outerjoin(Movie.directors)
         .options(
             selectinload(Movie.genres),
             selectinload(Movie.stars),
@@ -298,3 +300,29 @@ async def create_comment(
     await db.commit()
     await db.refresh(comment)
     return comment
+
+
+async def list_genres_with_count(db: AsyncSession):
+    stmt = (
+        select(
+            Genre.id,
+            Genre.name,
+            func.count(movie_genres.c.movie_id).label("movie_count")
+        )
+        .join(movie_genres, movie_genres.c.genre_id == Genre.id, isouter=True)
+        .group_by(Genre.id)
+    )
+    result = await db.execute(stmt)
+    return [dict(row._mapping) for row in result.all()]
+
+
+async def get_movies_by_genre(db: AsyncSession, genre_id: int, offset: int = 0, limit: int = 20):
+    stmt = (
+        select(Movie)
+        .join(movie_genres, movie_genres.c.movie_id == Movie.id)
+        .where(movie_genres.c.genre_id == genre_id)
+        .offset(offset)
+        .limit(limit)
+    )
+    result = await db.execute(stmt)
+    return result.scalars().all()
