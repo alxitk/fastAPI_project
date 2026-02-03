@@ -1,4 +1,5 @@
 import decimal
+from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
 
@@ -69,6 +70,18 @@ class CertificationCreateSchema(BaseModel):
     name: str
 
 
+class MovieCommentSchema(BaseModel):
+    id: int
+    text: str
+    user_id: int
+    parent_id: int | None
+    created_at: datetime
+
+    model_config = {
+        "from_attributes": True
+    }
+
+
 class MovieBaseSchema(BaseModel):
     name: str = Field(..., max_length=255)
     year: int = Field(..., ge=1888)
@@ -106,6 +119,8 @@ class MovieDetailSchema(MovieBaseSchema):
     directors: list[DirectorSchema]
     certification: CertificationSchema | None
 
+    comments: list[MovieCommentSchema] = []
+
     model_config = {
         "from_attributes": True,
         "json_schema_extra": {
@@ -114,6 +129,7 @@ class MovieDetailSchema(MovieBaseSchema):
             ]
         }
     }
+
 
 class MovieListResponseSchema(BaseModel):
     movies: List[MovieListItemSchema]

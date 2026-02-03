@@ -190,3 +190,20 @@ async def list_favorites(
         search=search,
     )
     return favorites
+
+
+@movies_router.post("/movies/{movie_id}/comments")
+async def add_comment(
+    movie_id: int,
+    text: str,
+    parent_id: int | None = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    service = MovieService(db)
+    return await service.add_comment(
+        user_id=current_user.id,
+        movie_id=movie_id,
+        text=text,
+        parent_id=parent_id,
+    )

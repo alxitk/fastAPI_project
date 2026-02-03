@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.modules.movies.models.movie_models import Movie, Genre, Star, Director, Certification, MovieLike, \
-    MovieFavorites
+    MovieFavorites, MovieComment
 
 
 async def count_movies(
@@ -151,13 +151,19 @@ async def create_certification(db: AsyncSession, name: str):
 
 
 async def get_movie_detail(db: AsyncSession, movie_id: int):
-    stmt = (select(Movie).options(
-        selectinload(Movie.genres),
-        selectinload(Movie.stars),
-        selectinload(Movie.directors),
-        selectinload(Movie.certification)
+    stmt = (
+        select(Movie)
+        .options(
+            selectinload(Movie.genres),
+            selectinload(Movie.stars),
+            selectinload(Movie.directors),
+            selectinload(Movie.certification),
+            selectinload(Movie.comments)
+                .selectinload(MovieComment.replies),
+        )
+        .where(Movie.id == movie_id)
     )
-        .where(Movie.id == movie_id))
+
     result = await db.execute(stmt)
     return result.scalars().first()
 
@@ -273,3 +279,22 @@ async def list_favorites(
 
     result = await db.execute(stmt)
     return result.scalars().all()
+
+
+async def create_comment(
+        db: AsyncSession,
+        user_id: int,
+        movie_id: int,
+        text: str,
+        parent_id: int | None = None,
+):
+    comment = MovieComment(
+        user_id=user_id,
+        movie_id=movie_id,
+        text=text,
+        parent_id=parent_id,
+    )
+    db.add(comment)
+    await db.commit()
+    await db.refresh(comment)
+    return comment

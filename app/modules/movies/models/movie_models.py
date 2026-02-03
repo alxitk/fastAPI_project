@@ -1,5 +1,7 @@
 import uuid
+from datetime import datetime
 from decimal import Decimal
+from typing import Optional
 
 from sqlalchemy import Integer, String, Float, Text, Numeric, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -85,6 +87,11 @@ class Movie(Base):
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     likes = relationship("MovieLike", back_populates="movie")
     favorites = relationship("MovieFavorites", back_populates="movie")
+    comments = relationship(
+        "MovieComment",
+        back_populates="movie",
+        cascade="all, delete-orphan",
+    )
 
     certification: Mapped[Certification] = relationship(
         "Certification",
@@ -140,3 +147,46 @@ class MovieFavorites(Base):
     movie = relationship("Movie", back_populates="favorites")
 
     __table_args__ = (UniqueConstraint('user_id', 'movie_id', name='uq_user_favorite'),)
+
+
+class MovieComment(Base):
+    __tablename__ = "movie_comments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    movie_id: Mapped[int] = mapped_column(
+        ForeignKey("movies.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    parent_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("movie_comments.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        default=datetime.utcnow
+    )
+
+    user = relationship("User", back_populates="movie_comments")
+    movie = relationship("Movie", back_populates="comments")
+
+    parent = relationship(
+        "MovieComment",
+        remote_side=[id],
+        foreign_keys=[parent_id],
+        back_populates="replies",
+    )
+
+    replies = relationship(
+        "MovieComment",
+        back_populates="parent",
+        foreign_keys=[parent_id],
+        cascade="all, delete-orphan",
+    )

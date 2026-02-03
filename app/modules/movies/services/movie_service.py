@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.movies.crud.movies_crud import count_movies, get_movies, create_movie, create_certification, \
-    get_movie_detail, add_movie_like, get_favorite, create_favorite, delete_favorite, list_favorites
+    get_movie_detail, add_movie_like, get_favorite, create_favorite, delete_favorite, list_favorites, create_comment
 from app.modules.movies.models.movie_models import Movie, Certification, Genre, Star, Director
 from app.modules.movies.schemas.movie_schema import MovieCreateSchema, MovieDetailSchema, CertificationCreateSchema
 
@@ -183,4 +183,20 @@ class MovieService:
             sort_by=sort_by,
             order=order,
             search=search,
+        )
+
+
+    async def add_comment(
+        self,
+        user_id: int,
+        movie_id: int,
+        text: str,
+        parent_id: int | None = None,
+    ):
+        return await create_comment(
+            self._db,
+            user_id=user_id,
+            movie_id=movie_id,
+            text=text,
+            parent_id=parent_id,
         )
