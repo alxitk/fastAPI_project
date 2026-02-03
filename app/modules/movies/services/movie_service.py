@@ -2,12 +2,15 @@ from fastapi import HTTPException
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
+from app.config.dependencies import get_email_sender
 from app.modules.movies.crud.movies_crud import count_movies, get_movies, create_movie, create_certification, \
-    get_movie_detail, add_movie_like, get_favorite, create_favorite, delete_favorite, list_favorites, create_comment, \
-    list_genres_with_count, get_movies_by_genre
-from app.modules.movies.models.movie_models import Movie, Certification, Genre, Star, Director
+    add_movie_like, get_favorite, create_favorite, delete_favorite, list_favorites, create_comment, \
+    list_genres_with_count, get_movies_by_genre, get_movie_detail
+from app.modules.movies.models.movie_models import Movie, Certification, Genre, Star, Director, MovieComment
 from app.modules.movies.schemas.movie_schema import MovieCreateSchema, MovieDetailSchema, CertificationCreateSchema
+from app.modules.movies.services.comment_notification_service import CommentNotificationService
 
 
 class MovieService:
@@ -149,16 +152,12 @@ class MovieService:
         return movie
 
     async def like_movie(self, user_id: int, movie_id: int, like: bool):
-        movie = await get_movie_detail(self._db, movie_id)
-        if not movie:
-            raise HTTPException(status_code=404, detail="Movie not found")
+        await self.get_movie_by_id(movie_id)
         value = 1 if like else -1
         return await add_movie_like(self._db, user_id, movie_id, value)
 
     async def add_to_favorites(self, user_id: int, movie_id: int):
-        movie = await get_movie_detail(self._db, movie_id)
-        if not movie:
-            raise HTTPException(status_code=404, detail="Movie not found")
+        await self.get_movie_by_id(movie_id)
         exists = await get_favorite(self._db, user_id, movie_id)
         if exists:
             return exists
@@ -192,25 +191,39 @@ class MovieService:
             search=search,
         )
 
-
     async def add_comment(
-        self,
-        user_id: int,
-        movie_id: int,
-        text: str,
-        parent_id: int | None = None,
+            self,
+            user_id: int,
+            movie_id: int,
+            text: str,
+            parent_id: int | None = None,
     ):
-        movie = await get_movie_detail(self._db, movie_id)
+        movie = await self.get_movie_by_id(movie_id)
         if not movie:
             raise HTTPException(status_code=404, detail="Movie not found")
 
-        return await create_comment(
+        comment = await create_comment(
             self._db,
             user_id=user_id,
             movie_id=movie_id,
             text=text,
             parent_id=parent_id,
         )
+
+        if parent_id:
+            stmt = select(MovieComment).options(selectinload(MovieComment.user)).where(MovieComment.id == parent_id)
+            result = await self._db.execute(stmt)
+            parent_comment = result.scalar_one_or_none()
+
+            if parent_comment and parent_comment.user_id != user_id:
+                notification_service = CommentNotificationService(email_sender=get_email_sender())
+                await notification_service.notify_reply(
+                    parent_user_email=parent_comment.user.email,
+                    reply_text=text,
+                    movie_name=movie.name
+                )
+
+        return comment
 
 
     async def list_genres(self):
