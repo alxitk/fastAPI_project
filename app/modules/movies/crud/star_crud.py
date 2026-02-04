@@ -53,3 +53,11 @@ async def delete_star(db: AsyncSession, star_id: int) -> bool:
     await db.delete(star)
     await db.commit()
     return True
+
+
+async def get_star_by_name(db: AsyncSession, name: str) -> Star | None:
+    """
+    Retrieve a star by its name.
+    """
+    result = await db.execute(select(Star).where(Star.name == name))
+    return result.scalar_one_or_none()
