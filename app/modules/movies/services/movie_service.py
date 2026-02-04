@@ -27,6 +27,7 @@ from app.modules.movies.crud.movies_crud import (
     get_movie_detail,
     update_movie,
 )
+from app.modules.movies.crud.star_crud import create_star, get_star_list, get_star, update_star, delete_star
 from app.modules.movies.models.movie_models import (
     Movie,
     Certification,
@@ -56,7 +57,10 @@ class MovieService:
         self._db = db
         self._base_url = base_url
 
-    async def create_certification(self, certification_data: CertificationCreateSchema):
+    async def create_certification(
+            self,
+            certification_data: CertificationCreateSchema
+    ):
         stmt = select(Certification).where(
             Certification.name == certification_data.name
         )
@@ -295,3 +299,31 @@ class MovieService:
         if not success:
             raise HTTPException(status_code=404, detail="Genre not found")
         return {"detail": "Genre deleted"}
+
+
+    async def create_star(self, name: str) -> Star:
+        existing = await self.get_star_by_name(name)
+        if existing:
+            raise HTTPException(status_code=400, detail="Star already exists")
+        return await create_star(self._db, name)
+
+    async def list_stars(self) -> list[Star]:
+        return await get_star_list(self._db)
+
+    async def get_star(self, star_id: int) -> Star:
+        star = await get_star(self._db, star_id)
+        if not star:
+            raise HTTPException(status_code=404, detail="Star not found")
+        return star
+
+    async def update_star(self, star_id: int, name: str) -> Star:
+        star = await update_star(self._db, star_id, name)
+        if not star:
+            raise HTTPException(status_code=404, detail="Star not found")
+        return star
+
+    async def delete_star(self, star_id: int) -> dict:
+        success = await delete_star(self._db, star_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Star not found")
+        return {"detail": "Star deleted"}
