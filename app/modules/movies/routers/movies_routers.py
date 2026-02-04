@@ -1,16 +1,12 @@
-from fastapi import APIRouter, Query, Depends, HTTPException
+from fastapi import APIRouter, Query, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config.dependencies import get_current_user, get_current_moderator_user
+from app.config.dependencies import get_current_user
 from app.database.session import get_db
 from app.modules.movies.schemas.movie_schema import (
     MovieListResponseSchema,
-    MovieCreateSchema,
     MovieDetailSchema,
-    CertificationSchema,
-    CertificationCreateSchema,
     GenreWithCountSchema,
-    MovieUpdateSchema,
 )
 from app.modules.movies.services.movie_service import MovieService
 from app.modules.users.models.user import User
@@ -82,21 +78,21 @@ async def get_movie_list(
     )
 
 
-@movies_router.post(
-    "/certification/",
-    response_model=CertificationSchema,
-)
-async def create_certification(
-    certification_name: CertificationCreateSchema, db: AsyncSession = Depends(get_db)
-):
-    service = MovieService(db)
-    certification = await service.create_certification(certification_name)
-    return certification
-
-
 @movies_router.get(
     "/movies/{movie_id}/",
     response_model=MovieDetailSchema,
+    summary="Retrieve details of a single movie by ID",
+    description="Get all information for a specific movie by its ID.",
+    responses={
+        404: {
+            "description": "Movie not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Movie not found"}
+                }
+            },
+        }
+    },
 )
 async def get_movie(movie_id: int, db: AsyncSession = Depends(get_db)):
     service = MovieService(db)
@@ -104,7 +100,29 @@ async def get_movie(movie_id: int, db: AsyncSession = Depends(get_db)):
     return movie
 
 
-@movies_router.post("/movies/{movie_id}/like")
+@movies_router.post(
+    "/movies/{movie_id}/like",
+    summary="Like or dislike a movie",
+    description="Add or update the current user's like for a movie.",
+    responses={
+        401: {
+            "description": "Authentication required",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Not authenticated"}
+                }
+            },
+        },
+        404: {
+            "description": "Movie not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Movie not found"}
+                }
+            },
+        },
+    },
+)
 async def like_movie(
     movie_id: int,
     like: bool = True,
@@ -116,7 +134,29 @@ async def like_movie(
     return {"movie_id": movie_id, "value": movie_like.value}
 
 
-@movies_router.post("/movies/{movie_id}/favorite")
+@movies_router.post(
+    "/movies/{movie_id}/favorite",
+    summary="Add movie to favorites",
+    description="Add the specified movie to the current user's favorites list.",
+    responses={
+        401: {
+            "description": "Authentication required",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Not authenticated"}
+                }
+            },
+        },
+        404: {
+            "description": "Movie not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Movie not found"}
+                }
+            },
+        },
+    },
+)
 async def add_favorite(
     movie_id: int,
     current_user: User = Depends(get_current_user),
@@ -127,7 +167,29 @@ async def add_favorite(
     return favorite
 
 
-@movies_router.delete("/movies/{movie_id}/favorite")
+@movies_router.delete(
+    "/movies/{movie_id}/favorite",
+    summary="Remove movie from favorites",
+    description="Remove the specified movie from the current user's favorites list.",
+    responses={
+        401: {
+            "description": "Authentication required",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Not authenticated"}
+                }
+            },
+        },
+        404: {
+            "description": "Movie not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Movie not found"}
+                }
+            },
+        },
+    },
+)
 async def remove_favorite(
     movie_id: int,
     current_user: User = Depends(get_current_user),
@@ -138,7 +200,21 @@ async def remove_favorite(
     return favorite
 
 
-@movies_router.get("/movies/favorites")
+@movies_router.get(
+    "/movies/favorites",
+    summary="Get user's favorite movies",
+    description="Retrieve a paginated list of movies added to the current user's favorites.",
+    responses={
+        401: {
+            "description": "Authentication required",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Not authenticated"}
+                }
+            },
+        }
+    },
+)
 async def list_favorites(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -166,7 +242,29 @@ async def list_favorites(
     return favorites
 
 
-@movies_router.post("/movies/{movie_id}/comments")
+@movies_router.post(
+    "/movies/{movie_id}/comments",
+    summary="Add a comment to a movie",
+    description="Create a new comment for a movie or reply to an existing comment.",
+    responses={
+        401: {
+            "description": "Authentication required",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Not authenticated"}
+                }
+            },
+        },
+        404: {
+            "description": "Movie or parent comment not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Movie not found"}
+                }
+            },
+        },
+    },
+)
 async def add_comment(
     movie_id: int,
     text: str,
@@ -186,14 +284,39 @@ async def add_comment(
 @movies_router.get(
     "/genres/",
     response_model=list[GenreWithCountSchema],
-    summary="Genres list",
+    summary="List movie genres",
+    description="Retrieve all movie genres with the number of movies in each genre.",
+    responses={
+        404: {
+            "description": "Genres not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Genres not found"}
+                }
+            },
+        }
+    },
 )
 async def list_genres(db: AsyncSession = Depends(get_db)):
     service = MovieService(db)
     return await service.list_genres()
 
 
-@movies_router.get("/genres/{genre_id}/movies")
+@movies_router.get(
+    "/genres/{genre_id}/movies",
+    summary="List movies by genre",
+    description="Retrieve a paginated list of movies belonging to a specific genre.",
+    responses={
+        404: {
+            "description": "Genre not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Genre not found"}
+                }
+            },
+        }
+    },
+)
 async def movies_by_genre(
     genre_id: int,
     page: int = Query(1, ge=1),
@@ -202,5 +325,4 @@ async def movies_by_genre(
 ):
     service = MovieService(db)
     offset = (page - 1) * per_page
-    movies = await service.get_movies_by_genre(genre_id, offset, per_page)
-    return movies
+    return await service.get_movies_by_genre(genre_id, offset, per_page)
