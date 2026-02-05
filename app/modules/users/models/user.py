@@ -81,6 +81,14 @@ class User(Base):
         lazy="joined",
     )
 
+    likes = relationship("MovieLike", back_populates="user")
+    favorites = relationship("MovieFavorites", back_populates="user")
+    movie_comments = relationship(
+        "MovieComment",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
     @property
     def hashed_password(self) -> str:
         """Get hashed password."""
