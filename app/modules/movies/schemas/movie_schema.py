@@ -7,7 +7,8 @@ from pydantic import BaseModel, Field
 
 from app.modules.movies.schemas.examples.movies_schema_examples import director_schema_example, star_schema_example, \
     genre_schema_example, certification_schema_example, movie_list_response_schema_example, movie_list_item_example, \
-    movie_create_schema_example, movie_detail_schema_example
+    movie_create_schema_example, movie_detail_schema_example, movie_comment_schema_example, \
+    genre_with_count_schema_example, star_with_count_schema_example
 
 
 class GenreSchema(BaseModel):
@@ -78,7 +79,12 @@ class MovieCommentSchema(BaseModel):
     created_at: datetime
 
     model_config = {
-        "from_attributes": True
+        "from_attributes": True,
+        "json_schema_extra": {
+            "examples": [
+                movie_comment_schema_example
+            ]
+        }
     }
 
 
@@ -192,5 +198,25 @@ class GenreWithCountSchema(BaseModel):
     movie_count: int
 
     model_config = {
-        "from_attributes": True
+        "from_attributes": True,
+        "json_schema_extra": {
+            "examples": [
+                genre_with_count_schema_example
+            ]
+        }
+    }
+
+
+class StarWithCountSchema(BaseModel):
+    id: int
+    name: str
+    movie_count: int
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "examples": [
+                star_with_count_schema_example
+            ]
+        }
     }

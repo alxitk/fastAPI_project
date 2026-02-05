@@ -80,3 +80,23 @@ movie_detail_schema_example = {
         }
     ]
 }
+
+movie_comment_schema_example = {
+    "id": 12,
+    "text": "Great movie!",
+    "user_id": 3,
+    "parent_id": None,
+    "created_at": "2024-05-01T14:32:10"
+}
+
+genre_with_count_schema_example = {
+    "id": 1,
+    "name": "Action",
+    "movie_count": 15
+}
+
+star_with_count_schema_example = {
+    "id": 2,
+    "name": "Leonardo DiCaprio",
+    "movie_count": 7
+}
