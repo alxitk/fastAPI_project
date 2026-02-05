@@ -6,7 +6,7 @@ from app.database.session import get_db
 from app.modules.movies.schemas.movie_schema import (
     MovieListResponseSchema,
     MovieDetailSchema,
-    GenreWithCountSchema,
+    GenreWithCountSchema, StarWithCountSchema,
 )
 from app.modules.movies.services.movie_service import MovieService
 from app.modules.users.models.user import User
@@ -326,3 +326,50 @@ async def movies_by_genre(
     service = MovieService(db)
     offset = (page - 1) * per_page
     return await service.get_movies_by_genre(genre_id, offset, per_page)
+
+
+@movies_router.get(
+    "/stars/",
+    response_model=list[StarWithCountSchema],
+    summary="List stars",
+    description="Retrieve all stars with the number of movies for each star.",
+    responses={
+        404: {
+            "description": "Stars not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Stars not found"}
+                }
+            },
+        }
+    },
+)
+async def get_stars_with_count(db: AsyncSession = Depends(get_db)):
+    service = MovieService(db)
+    return await service.list_stars_with_count()
+
+
+@movies_router.get(
+    "/stars/{star_id}/stars",
+    summary="List movies by star",
+    description="Retrieve a paginated list of movies with a specific star.",
+    responses={
+        404: {
+            "description": "Star not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Star not found"}
+                }
+            },
+        }
+    },
+)
+async def movies_by_star(
+    star_id: int,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(10, ge=1, le=20),
+    db: AsyncSession = Depends(get_db),
+):
+    service = MovieService(db)
+    offset = (page - 1) * per_page
+    return await service.get_movies_by_star(star_id, offset, per_page)
