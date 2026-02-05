@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.config.dependencies import get_current_moderator_user, get_movie_service
+from app.database.session import get_db
 from app.modules.movies.schemas.movie_schema import (
     MovieCreateSchema,
     MovieDetailSchema,
-    MovieUpdateSchema,
+    MovieUpdateSchema, CertificationSchema, CertificationCreateSchema,
 )
 from app.modules.movies.services.movie_service import MovieService
 
@@ -164,3 +167,120 @@ async def update_movie(
 
 # async def delete_movie(db: AsyncSession, movie_id: int):
 #     return {"detail": "Deletion disabled until purchases are implemented"}
+
+
+@moderator_router.post(
+    "/stars",
+    dependencies=[Depends(get_current_moderator_user)],
+    summary="Create a new star",
+    description=(
+        "<h3>This endpoint allows moderators to create a new star in the database.</h3>"
+    ),
+    responses={
+        201: {
+            "description": "Star created successfully.",
+        },
+        400: {
+            "description": "Invalid input data.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid input data."}}
+            },
+        },
+    },
+    status_code=201,
+)
+async def create_star(
+    name: str,
+    service: MovieService = Depends(get_movie_service),
+):
+    return await service.create_star(name)
+
+
+@moderator_router.put(
+    "/stars/{star_id}",
+    dependencies=[Depends(get_current_moderator_user)],
+    summary="Update an existing star",
+    description=(
+        "<h3>This endpoint allows moderators to update an existing star in the database.</h3>"
+    ),
+    responses={
+        200: {
+            "description": "Star updated successfully.",
+        },
+        400: {
+            "description": "Invalid input data.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid input data."}}
+            },
+        },
+        404: {
+            "description": "Star not found.",
+            "content": {
+                "application/json": {"example": {"detail": "Star not found."}}
+            },
+        },
+    },
+    status_code=200,
+)
+async def update_star(
+    star_id: int,
+    name: str,
+    service: MovieService = Depends(get_movie_service),
+):
+    return await service.update_star(star_id, name)
+
+
+@moderator_router.delete(
+    "/stars/{star_id}",
+    dependencies=[Depends(get_current_moderator_user)],
+    summary="Delete a star",
+    description=(
+        "<h3>This endpoint allows moderators to delete a star from the database.</h3>"
+    ),
+    responses={
+        200: {
+            "description": "Star deleted successfully.",
+        },
+        404: {
+            "description": "Star not found.",
+            "content": {
+                "application/json": {"example": {"detail": "Genre not found."}}
+            },
+        },
+    },
+    status_code=200,
+)
+async def delete_star(
+    star_id: int,
+    service: MovieService = Depends(get_movie_service),
+):
+    return await service.delete_star(star_id)
+
+
+@moderator_router.post(
+    "/certification/",
+    response_model=CertificationSchema,
+    dependencies=[Depends(get_current_moderator_user)],
+    summary="Create a new certification",
+    description=(
+        "<h3>This endpoint allows moderators to create a new certification in the database.</h3>"
+    ),
+    responses={
+        201: {
+            "description": "Certification created successfully.",
+        },
+        400: {
+            "description": "Invalid input data.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid input data."}}
+            },
+        },
+    },
+    status_code=201,
+)
+async def create_certification(
+    certification_name: CertificationCreateSchema,
+    service: MovieService = Depends(get_movie_service),
+):
+    certification = await service.create_certification(certification_name)
+    return certification
