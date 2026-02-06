@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - feature/ci
+  pull_request:
+    branches:
+      - feature/ci
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry and dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install --with dev
+
+      - name: Lint code
+        run: poetry run flake8 .
+
+      - name: Format check
+        run: poetry run black --check .
+
+      - name: Type checking
+        run: poetry run mypy .
+
+      - name: Run tests
+        run: poetry run pytest --cov=.
