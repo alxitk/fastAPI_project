@@ -11,6 +11,8 @@ celery_app = Celery(
     backend=os.getenv("CELERY_RESULT_BACKEND"),
 )
 
+celery_app.autodiscover_tasks(["app.tasks"])
+
 celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
@@ -21,6 +23,3 @@ celery_app.conf.update(
         },
     },
 )
-
-
-import app.tasks.cleanup_tokens  # noqa
