@@ -71,3 +71,12 @@ psycopg2-binary = "^2.9.11"
 flake8 = "^7.1.0"
 mypy = "^1.11.0"
 pytest-cov = "^4.1.0"
+
+[tool.black]
+line-length = 88
+exclude = '''
+/(
+    alembic
+  | migrations
+)/
+'''
