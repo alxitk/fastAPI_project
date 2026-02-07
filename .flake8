@@ -8,3 +8,8 @@ exclude = .venv
 extend-exclude =
     ./tests/*,
     ./alembic/*
+per-file-ignores =
+    __init__.py:F401
+    alembic/env.py:F401,E501
+    */schemas/*.py:VNE003
+    */models/*.py:VNE003, F821

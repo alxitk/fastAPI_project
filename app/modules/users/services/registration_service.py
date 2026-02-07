@@ -30,7 +30,7 @@ class RegistrationService:
         user_service: UserService,
         email_sender: EmailSenderInterface | None = None,
         base_url: str = "http://localhost:8000",
-    ):
+    ) -> None:
         self._db = db
         self._jwt_manager = jwt_manager
         self._login_time_days = login_time_days
@@ -198,7 +198,6 @@ class RegistrationService:
             )
             self._db.add(new_token)
             await self._db.commit()
-
 
         activation_link = f"{self._base_url}/auth/activate?email={email}&token={token}"
 

@@ -70,7 +70,9 @@ async def get_current_user(
     return user
 
 
-def get_current_moderator_user(user=Depends(get_current_user)):
+def get_current_moderator_user(
+    user: User = Depends(get_current_user)
+) -> User:
     """
     Ensure the current user has moderator privileges.
     """
@@ -82,7 +84,7 @@ def get_current_moderator_user(user=Depends(get_current_user)):
 def get_user_service(
     db: AsyncSession = Depends(get_db),
     jwt_manager: JWTAuthManagerInterface = Depends(get_jwt_auth_manager),
-    settings=Depends(get_settings),
+    settings: BaseAppSettings = Depends(get_settings),
 ) -> UserService:
     """
     Provides a UserService instance.
@@ -138,12 +140,12 @@ def get_registration_service(
 
 def get_password_service(
     db: AsyncSession = Depends(get_db),
-    jwt_manager=Depends(get_jwt_auth_manager),
+    jwt_manager: JWTAuthManagerInterface = Depends(get_jwt_auth_manager),
     user_service: UserService = Depends(get_user_service),
     login_time_days: int = Depends(
         lambda settings=Depends(get_settings): settings.LOGIN_TIME_DAYS
     ),
-    settings=Depends(get_settings),
+    settings: BaseAppSettings = Depends(get_settings),
 ) -> PasswordService:
     """
     Provides a PasswordService instance.
@@ -159,8 +161,8 @@ def get_password_service(
 
 
 def get_current_admin_user(
-    user=Depends(get_current_user),
-):
+    user: User = Depends(get_current_user),
+) -> User:
     """
     Ensure the current user has admin privileges.
     """
@@ -174,7 +176,7 @@ def get_current_admin_user(
 
 def get_movie_service(
     db: AsyncSession = Depends(get_db),
-):
+) -> MovieService:
     """
     Provide a MovieService instance with an injected database session.
     """

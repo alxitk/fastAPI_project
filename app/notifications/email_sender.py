@@ -23,7 +23,7 @@ class EmailSender(EmailSenderInterface):
         activation_complete_email_template_name: str,
         password_email_template_name: str,
         password_complete_email_template_name: str,
-    ):
+    ) -> None:
         self._hostname = hostname
         self._port = port
         self._email = email

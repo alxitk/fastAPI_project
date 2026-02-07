@@ -1,7 +1,9 @@
+from typing import Type, TypeVar
+
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, DeclarativeBase
 
 from app.config.dependencies import get_email_sender
 from app.modules.movies.crud.genre_crud import (
@@ -43,6 +45,8 @@ from app.modules.movies.models.movie_models import (
     Star,
     Director,
     MovieComment,
+    MovieLike,
+    MovieFavorites,
 )
 from app.modules.movies.schemas.movie_schema import (
     MovieCreateSchema,
@@ -56,6 +60,9 @@ from app.modules.movies.services.comment_notification_service import (
 )
 
 
+T = TypeVar("T", bound=DeclarativeBase)
+
+
 class MovieService:
     """Service layer for movie-related business logic."""
 
@@ -63,11 +70,15 @@ class MovieService:
         self,
         db: AsyncSession,
         base_url: str = "http://localhost:8000",
-    ):
+    ) -> None:
         self._db = db
         self._base_url = base_url
 
-    async def _get_or_create_entity(self, model, name: str):
+    async def _get_or_create_entity(
+        self,
+        model: Type[T],
+        name: str
+    ) -> T:
         """Get model or create new one by name."""
         stmt = select(model).where(model.name == name)
         result = await self._db.execute(stmt)
@@ -80,7 +91,9 @@ class MovieService:
 
         return entity
 
-    async def create_certification(self, certification_data: CertificationCreateSchema):
+    async def create_certification(
+        self, certification_data: CertificationCreateSchema
+    ) -> Certification:
         """Create a new certification."""
         stmt = select(Certification).where(
             Certification.name == certification_data.name
@@ -88,7 +101,9 @@ class MovieService:
         result = await self._db.execute(stmt)
 
         if result.scalars().first():
-            raise HTTPException(status_code=400, detail="Certification already exists")
+            raise HTTPException(
+                status_code=400, detail="Certification already exists"
+            )
 
         certification = await create_certification(
             db=self._db,
@@ -107,7 +122,7 @@ class MovieService:
         sort_by: str | None = None,
         order: str = "asc",
         search: str | None = None,
-    ):
+    ) -> tuple[list[Movie], int]:
         """Get paginated list of movies with filters."""
         movies = await get_movies(
             db=self._db,
@@ -129,7 +144,9 @@ class MovieService:
         )
         return movies, total
 
-    async def create_movie(self, movie_data: MovieCreateSchema):
+    async def create_movie(
+        self, movie_data: MovieCreateSchema
+    ) -> MovieDetailSchema:
         """Create a new movie with genres, stars, and directors."""
         stmt = select(Movie).where(
             Movie.name == movie_data.name,
@@ -147,13 +164,17 @@ class MovieService:
         certification = result.scalar_one_or_none()
 
         if not certification:
-            raise HTTPException(status_code=400, detail="Certification does not exist")
+            raise HTTPException(
+                status_code=400, detail="Certification does not exist"
+            )
 
         genres = [
-            await self._get_or_create_entity(Genre, name) for name in movie_data.genres
+            await self._get_or_create_entity(Genre, name)
+            for name in movie_data.genres
         ]
         stars = [
-            await self._get_or_create_entity(Star, name) for name in movie_data.stars
+            await self._get_or_create_entity(Star, name)
+            for name in movie_data.stars
         ]
         directors = [
             await self._get_or_create_entity(Director, name)
@@ -180,27 +201,33 @@ class MovieService:
 
         return MovieDetailSchema.from_orm(movie)
 
-    async def update_movie(self, movie_id: int, data: MovieUpdateSchema):
+    async def update_movie(
+        self, movie_id: int, data: MovieUpdateSchema
+    ) -> Movie:
         """Update an existing movie."""
         movie = await update_movie(self._db, movie_id, data)
         if not movie:
             raise HTTPException(status_code=404, detail="Movie not found")
         return movie
 
-    async def get_movie_by_id(self, movie_id: int):
+    async def get_movie_by_id(self, movie_id: int) -> Movie:
         """Get movie details by ID."""
         movie = await get_movie_detail(self._db, movie_id)
         if not movie:
             raise HTTPException(status_code=404, detail="Movie not found")
         return movie
 
-    async def like_movie(self, user_id: int, movie_id: int, like: bool):
+    async def like_movie(
+        self, user_id: int, movie_id: int, like: bool
+    ) -> MovieLike:
         """Add like or dislike to a movie."""
         await self.get_movie_by_id(movie_id)
         value = 1 if like else -1
         return await add_movie_like(self._db, user_id, movie_id, value)
 
-    async def add_to_favorites(self, user_id: int, movie_id: int):
+    async def add_to_favorites(
+        self, user_id: int, movie_id: int
+    ) -> MovieFavorites:
         """Add movie to user's favorites."""
         await self.get_movie_by_id(movie_id)
         exists = await get_favorite(self._db, user_id, movie_id)
@@ -208,7 +235,9 @@ class MovieService:
             return exists
         return await create_favorite(self._db, user_id, movie_id)
 
-    async def remove_from_favorites(self, user_id: int, movie_id: int):
+    async def remove_from_favorites(
+        self, user_id: int, movie_id: int
+    ) -> MovieFavorites | None:
         """Remove movie from user's favorites."""
         return await delete_favorite(self._db, user_id, movie_id)
 
@@ -223,7 +252,7 @@ class MovieService:
         sort_by: str | None = None,
         order: str = "asc",
         search: str | None = None,
-    ):
+    ) -> list[Movie]:
         """Get user's favorite movies with filters."""
         return await list_favorites(
             self._db,
@@ -244,8 +273,8 @@ class MovieService:
         movie_id: int,
         text: str,
         parent_id: int | None = None,
-    ):
-        """Add a comment to a movie and notify parent comment author if it's a reply."""
+    ) -> MovieComment:
+        """Add a comment to a movie and notify parent comment author."""
         movie = await self.get_movie_by_id(movie_id)
 
         comment = await create_comment(
@@ -281,7 +310,7 @@ class MovieService:
         """Create a new genre."""
         return await create_genre(self._db, name)
 
-    async def list_genres(self) -> list[Genre]:
+    async def list_genres(self) -> list[dict]:
         """Get list of all genres with movie counts."""
         return await list_genres_with_count(self._db)
 
@@ -299,7 +328,7 @@ class MovieService:
             raise HTTPException(status_code=404, detail="Genre not found")
         return genre
 
-    async def delete_genre(self, genre_id: int) -> dict:
+    async def delete_genre(self, genre_id: int) -> dict[str, str]:
         """Delete a genre."""
         success = await delete_genre(self._db, genre_id)
         if not success:
@@ -308,7 +337,7 @@ class MovieService:
 
     async def get_movies_by_genre(
         self, genre_id: int, offset: int = 0, limit: int = 20
-    ):
+    ) -> list[Movie]:
         """Get movies filtered by genre."""
         return await get_movies_by_genre(self._db, genre_id, offset, limit)
 
@@ -342,13 +371,15 @@ class MovieService:
             raise HTTPException(status_code=404, detail="Star not found")
         return star
 
-    async def delete_star(self, star_id: int) -> dict:
+    async def delete_star(self, star_id: int) -> dict[str, str]:
         """Delete a star."""
         success = await delete_star(self._db, star_id)
         if not success:
             raise HTTPException(status_code=404, detail="Star not found")
         return {"detail": "Star deleted"}
 
-    async def get_movies_by_star(self, star_id: int, offset: int = 0, limit: int = 20):
+    async def get_movies_by_star(
+        self, star_id: int, offset: int = 0, limit: int = 20
+    ) -> list[Movie]:
         """Get movies filtered by star."""
         return await get_movies_by_star(self._db, star_id, offset, limit)

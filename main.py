@@ -1,3 +1,5 @@
+from typing import Dict
+
 from fastapi import FastAPI
 
 from app.modules.movies.routers.moderator_routers import moderator_router
@@ -6,10 +8,12 @@ from app.modules.users.routers.auth_router import auth_router
 from app.modules.users.routers.password_router import password_router
 from app.modules.users.routers.registration_router import reg_router
 
+
 app = FastAPI()
 
+
 @app.get("/")
-async def read_root():
+async def read_root() -> Dict[str, str]:
     return {"message": "Hello, World!"}
 
 

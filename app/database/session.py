@@ -7,7 +7,10 @@ from app.config.settings_dependency import get_settings
 settings = get_settings()
 
 SQLALCHEMY_DATABASE_URL = (
-    f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_DB_PORT}/{settings.POSTGRES_DB}"
+    f"postgresql+asyncpg: //"
+    f"{settings.POSTGRES_USER}: "
+    f"{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}: "
+    f"{settings.POSTGRES_DB_PORT}/{settings.POSTGRES_DB}"
 )
 
 engine = create_async_engine(

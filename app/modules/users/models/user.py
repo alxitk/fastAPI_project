@@ -60,7 +60,7 @@ class User(Base):
     )
 
     password_reset_tokens: Mapped[list["PasswordResetTokenModel"]] = (
-        relationship(  # ← исправлено
+        relationship(
             "PasswordResetTokenModel",
             back_populates="user",
             cascade="all, delete-orphan",

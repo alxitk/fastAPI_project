@@ -16,7 +16,7 @@ class PasswordResetCompleteRequestSchema(BaseModel):
 
     @field_validator("new_password")
     @classmethod
-    def validate_password(cls, value):
+    def validate_password(cls, value: str) -> str:
         return validate_strong_password(value)
 
     model_config = {"extra": "forbid"}

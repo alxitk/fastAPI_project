@@ -11,16 +11,17 @@ class BaseEmailPasswordSchema(BaseModel):
 
     @field_validator("email")
     @classmethod
-    def validate_email(cls, value):
+    def validate_email(cls, value: str) -> str:
         return value.lower()
 
     @field_validator("password")
     @classmethod
-    def validate_password(cls, value):
+    def validate_password(cls, value: str) -> str:
         return validate_strong_password(value)
 
 
-class UserRegistrationRequestSchema(BaseEmailPasswordSchema): ...
+class UserRegistrationRequestSchema(BaseEmailPasswordSchema):
+    ...
 
 
 class UserRegistrationResponseSchema(BaseModel):
