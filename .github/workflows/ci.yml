@@ -19,9 +19,18 @@ jobs:
       - name: Build Docker image
         run: docker build -t myapp:test .
 
-      - name: Run tests and linting
+      - name: Run flake8
         run: |
           docker run --rm myapp:test flake8 .
-          docker run --rm myapp:test black --check .
-          docker run --rm myapp:test mypy .
+
+      - name: Run black
+        run: |          
+          docker run --rm myapp:test black --check .                          
+
+      - name: Run mypy
+        run: |                    
+          docker run --rm myapp:test mypy .          
+
+      - name: Run tests
+        run: |                              
           docker run --rm myapp:test pytest --cov=.
