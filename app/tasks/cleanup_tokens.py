@@ -27,4 +27,5 @@ def cleanup_expired_tokens() -> None:
             await session.commit()
 
     import asyncio
+
     asyncio.run(_cleanup())

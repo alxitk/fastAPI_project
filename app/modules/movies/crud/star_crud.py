@@ -88,10 +88,10 @@ async def list_stars_with_count(
 
 
 async def get_movies_by_star(
-        db: AsyncSession,
-        star_id: int,
-        offset: int = 0,
-        limit: int = 20,
+    db: AsyncSession,
+    star_id: int,
+    offset: int = 0,
+    limit: int = 20,
 ) -> List[Movie]:
     """
     Retrieve a paginated list of movies with a specific star.

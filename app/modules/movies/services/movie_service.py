@@ -74,11 +74,7 @@ class MovieService:
         self._db = db
         self._base_url = base_url
 
-    async def _get_or_create_entity(
-        self,
-        model: Type[T],
-        name: str
-    ) -> T:
+    async def _get_or_create_entity(self, model: Type[T], name: str) -> T:
         """Get model or create new one by name."""
         stmt = select(model).where(model.name == name)
         result = await self._db.execute(stmt)
@@ -101,9 +97,7 @@ class MovieService:
         result = await self._db.execute(stmt)
 
         if result.scalars().first():
-            raise HTTPException(
-                status_code=400, detail="Certification already exists"
-            )
+            raise HTTPException(status_code=400, detail="Certification already exists")
 
         certification = await create_certification(
             db=self._db,
@@ -144,9 +138,7 @@ class MovieService:
         )
         return movies, total
 
-    async def create_movie(
-        self, movie_data: MovieCreateSchema
-    ) -> MovieDetailSchema:
+    async def create_movie(self, movie_data: MovieCreateSchema) -> MovieDetailSchema:
         """Create a new movie with genres, stars, and directors."""
         stmt = select(Movie).where(
             Movie.name == movie_data.name,
@@ -164,17 +156,13 @@ class MovieService:
         certification = result.scalar_one_or_none()
 
         if not certification:
-            raise HTTPException(
-                status_code=400, detail="Certification does not exist"
-            )
+            raise HTTPException(status_code=400, detail="Certification does not exist")
 
         genres = [
-            await self._get_or_create_entity(Genre, name)
-            for name in movie_data.genres
+            await self._get_or_create_entity(Genre, name) for name in movie_data.genres
         ]
         stars = [
-            await self._get_or_create_entity(Star, name)
-            for name in movie_data.stars
+            await self._get_or_create_entity(Star, name) for name in movie_data.stars
         ]
         directors = [
             await self._get_or_create_entity(Director, name)
@@ -201,9 +189,7 @@ class MovieService:
 
         return MovieDetailSchema.from_orm(movie)
 
-    async def update_movie(
-        self, movie_id: int, data: MovieUpdateSchema
-    ) -> Movie:
+    async def update_movie(self, movie_id: int, data: MovieUpdateSchema) -> Movie:
         """Update an existing movie."""
         movie = await update_movie(self._db, movie_id, data)
         if not movie:
@@ -217,17 +203,13 @@ class MovieService:
             raise HTTPException(status_code=404, detail="Movie not found")
         return movie
 
-    async def like_movie(
-        self, user_id: int, movie_id: int, like: bool
-    ) -> MovieLike:
+    async def like_movie(self, user_id: int, movie_id: int, like: bool) -> MovieLike:
         """Add like or dislike to a movie."""
         await self.get_movie_by_id(movie_id)
         value = 1 if like else -1
         return await add_movie_like(self._db, user_id, movie_id, value)
 
-    async def add_to_favorites(
-        self, user_id: int, movie_id: int
-    ) -> MovieFavorites:
+    async def add_to_favorites(self, user_id: int, movie_id: int) -> MovieFavorites:
         """Add movie to user's favorites."""
         await self.get_movie_by_id(movie_id)
         exists = await get_favorite(self._db, user_id, movie_id)

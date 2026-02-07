@@ -70,9 +70,7 @@ async def get_current_user(
     return user
 
 
-def get_current_moderator_user(
-    user: User = Depends(get_current_user)
-) -> User:
+def get_current_moderator_user(user: User = Depends(get_current_user)) -> User:
     """
     Ensure the current user has moderator privileges.
     """

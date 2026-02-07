@@ -216,9 +216,7 @@ async def create_star(
         },
         404: {
             "description": "Star not found.",
-            "content": {
-                "application/json": {"example": {"detail": "Star not found."}}
-            },
+            "content": {"application/json": {"example": {"detail": "Star not found."}}},
         },
     },
     status_code=200,
@@ -244,9 +242,7 @@ async def update_star(
         },
         404: {
             "description": "Star not found.",
-            "content": {
-                "application/json": {"example": {"detail": "Star not found."}}
-            },
+            "content": {"application/json": {"example": {"detail": "Star not found."}}},
         },
     },
     status_code=200,

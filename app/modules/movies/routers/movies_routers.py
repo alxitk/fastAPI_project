@@ -92,17 +92,11 @@ async def get_movie_list(
     responses={
         404: {
             "description": "Movie not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Movie not found"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Movie not found"}}},
         }
     },
 )
-async def get_movie(
-    movie_id: int, db: AsyncSession = Depends(get_db)
-) -> Movie:
+async def get_movie(movie_id: int, db: AsyncSession = Depends(get_db)) -> Movie:
     service = MovieService(db)
     movie = await service.get_movie_by_id(movie_id)
     return movie
@@ -116,18 +110,12 @@ async def get_movie(
         401: {
             "description": "Authentication required",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Not authenticated"}
-                }
+                "application/json": {"example": {"detail": "Not authenticated"}}
             },
         },
         404: {
             "description": "Movie not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Movie not found"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Movie not found"}}},
         },
     },
 )
@@ -150,18 +138,12 @@ async def like_movie(
         401: {
             "description": "Authentication required",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Not authenticated"}
-                }
+                "application/json": {"example": {"detail": "Not authenticated"}}
             },
         },
         404: {
             "description": "Movie not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Movie not found"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Movie not found"}}},
         },
     },
 )
@@ -183,18 +165,12 @@ async def add_favorite(
         401: {
             "description": "Authentication required",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Not authenticated"}
-                }
+                "application/json": {"example": {"detail": "Not authenticated"}}
             },
         },
         404: {
             "description": "Movie not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Movie not found"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Movie not found"}}},
         },
     },
 )
@@ -216,9 +192,7 @@ async def remove_favorite(
         401: {
             "description": "Authentication required",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Not authenticated"}
-                }
+                "application/json": {"example": {"detail": "Not authenticated"}}
             },
         }
     },
@@ -258,18 +232,12 @@ async def list_favorites(
         401: {
             "description": "Authentication required",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Not authenticated"}
-                }
+                "application/json": {"example": {"detail": "Not authenticated"}}
             },
         },
         404: {
             "description": "Movie or parent comment not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Movie not found"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Movie not found"}}},
         },
     },
 )
@@ -298,16 +266,12 @@ async def add_comment(
         404: {
             "description": "Genres not found",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Genres not found"}
-                }
+                "application/json": {"example": {"detail": "Genres not found"}}
             },
         }
     },
 )
-async def list_genres(
-    db: AsyncSession = Depends(get_db)
-) -> list[dict]:
+async def list_genres(db: AsyncSession = Depends(get_db)) -> list[dict]:
     service = MovieService(db)
     return await service.list_genres()
 
@@ -319,11 +283,7 @@ async def list_genres(
     responses={
         404: {
             "description": "Genre not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Genre not found"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Genre not found"}}},
         }
     },
 )
@@ -346,16 +306,12 @@ async def movies_by_genre(
     responses={
         404: {
             "description": "Stars not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Stars not found"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Stars not found"}}},
         }
     },
 )
 async def get_stars_with_count(
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> list[StarWithCountSchema]:
     service = MovieService(db)
     return await service.list_stars_with_count()
@@ -368,11 +324,7 @@ async def get_stars_with_count(
     responses={
         404: {
             "description": "Star not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Star not found"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Star not found"}}},
         }
     },
 )

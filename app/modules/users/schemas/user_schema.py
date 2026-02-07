@@ -20,8 +20,7 @@ class BaseEmailPasswordSchema(BaseModel):
         return validate_strong_password(value)
 
 
-class UserRegistrationRequestSchema(BaseEmailPasswordSchema):
-    ...
+class UserRegistrationRequestSchema(BaseEmailPasswordSchema): ...
 
 
 class UserRegistrationResponseSchema(BaseModel):

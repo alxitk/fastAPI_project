@@ -59,12 +59,10 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
-    password_reset_tokens: Mapped[list["PasswordResetTokenModel"]] = (
-        relationship(
-            "PasswordResetTokenModel",
-            back_populates="user",
-            cascade="all, delete-orphan",
-        )
+    password_reset_tokens: Mapped[list["PasswordResetTokenModel"]] = relationship(
+        "PasswordResetTokenModel",
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
 
     refresh_tokens: Mapped[list["RefreshTokenModel"]] = relationship(

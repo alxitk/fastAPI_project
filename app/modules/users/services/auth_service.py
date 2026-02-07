@@ -20,6 +20,7 @@ class AuthService:
     token refresh, and logout. It manages user credentials verification, token creation,
     and token revocation.
     """
+
     def __init__(
         self,
         db: AsyncSession,
