@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 
 from app.config.dependencies import get_auth_service, get_current_user_id
 from app.modules.users.schemas.token_schema import (

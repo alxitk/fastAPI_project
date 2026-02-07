@@ -1,5 +1,3 @@
-from types import SimpleNamespace
-
 genre_schema_example = {
     "id": 1,
     "genre": "Comedy"

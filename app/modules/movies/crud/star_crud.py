@@ -3,7 +3,7 @@ from typing import List
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.movies.models.associations import movie_genres, movie_stars
+from app.modules.movies.models.associations import movie_stars
 from app.modules.movies.models.movie_models import Star, Movie
 
 

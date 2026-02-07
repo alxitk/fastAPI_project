@@ -1,8 +1,6 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.dependencies import get_current_moderator_user, get_movie_service
-from app.database.session import get_db
 from app.modules.movies.models.movie_models import Genre, Star, Certification
 from app.modules.movies.schemas.movie_schema import (
     MovieCreateSchema,

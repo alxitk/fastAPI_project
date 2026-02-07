@@ -5,7 +5,6 @@ from app.config.dependencies import get_current_user
 from app.database.session import get_db
 from app.modules.movies.models.movie_models import (
     Movie,
-    MovieLike,
     MovieFavorites,
     MovieComment,
 )
