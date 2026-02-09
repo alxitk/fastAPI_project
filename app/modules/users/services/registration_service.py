@@ -59,14 +59,14 @@ class RegistrationService:
         Raises:
             HTTPException: If user already exists or default group is missing.
         """
-        stmt = select(User).where(User.email == email)
-        result = await self._db.execute(stmt)
+        user_stmt = select(User).where(User.email == email)
+        result = await self._db.execute(user_stmt)
         existing_user = result.scalars().first()
         if existing_user:
             raise HTTPException(status_code=409, detail="User already exists")
 
-        stmt = select(UserGroupModel).where(UserGroupModel.name == UserGroupEnum.USER)
-        result = await self._db.execute(stmt)
+        group_stmt = select(UserGroupModel).where(UserGroupModel.name == UserGroupEnum.USER)
+        result = await self._db.execute(group_stmt)
         user_group = result.scalars().first()
         if not user_group:
             raise HTTPException(status_code=500, detail="Default user group not found")

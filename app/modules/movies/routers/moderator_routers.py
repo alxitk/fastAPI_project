@@ -163,7 +163,8 @@ async def update_movie(
     movie_data: MovieUpdateSchema,
     service: MovieService = Depends(get_movie_service),
 ) -> MovieDetailSchema:
-    return await service.update_movie(movie_id, movie_data)
+    movie = await service.update_movie(movie_id, movie_data)
+    return MovieDetailSchema.model_validate(movie)
 
 
 # async def delete_movie(db: AsyncSession, movie_id: int):

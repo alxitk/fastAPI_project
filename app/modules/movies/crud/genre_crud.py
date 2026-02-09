@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,7 +17,7 @@ async def create_genre(db: AsyncSession, name: str) -> Genre:
     return genre
 
 
-async def list_genres(db: AsyncSession) -> list[Genre]:
+async def list_genres(db: AsyncSession) -> Sequence[Genre]:
     """
     Retrieve all genres from the database.
     """

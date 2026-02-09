@@ -40,7 +40,7 @@ class EmailSender(EmailSenderInterface):
 
         self._env = Environment(loader=FileSystemLoader(template_dir))
 
-    async def _send_email(
+    async def send_email(
         self, recipient: str, subject: str, html_content: str
     ) -> None:
         """
@@ -85,7 +85,7 @@ class EmailSender(EmailSenderInterface):
         template = self._env.get_template(self._activation_email_template_name)
         html_content = template.render(email=email, activation_link=activation_link)
         subject = "Account Activation"
-        await self._send_email(email, subject, html_content)
+        await self.send_email(email, subject, html_content)
 
     async def send_activation_complete_email(self, email: str, login_link: str) -> None:
         """
@@ -98,7 +98,7 @@ class EmailSender(EmailSenderInterface):
         template = self._env.get_template(self._activation_complete_email_template_name)
         html_content = template.render(email=email, login_link=login_link)
         subject = "Account Activated Successfully"
-        await self._send_email(email, subject, html_content)
+        await self.send_email(email, subject, html_content)
 
     async def send_password_reset_email(self, email: str, reset_link: str) -> None:
         """
@@ -111,7 +111,7 @@ class EmailSender(EmailSenderInterface):
         template = self._env.get_template(self._password_email_template_name)
         html_content = template.render(email=email, reset_link=reset_link)
         subject = "Password Reset Request"
-        await self._send_email(email, subject, html_content)
+        await self.send_email(email, subject, html_content)
 
     async def send_password_reset_complete_email(
         self, email: str, login_link: str
@@ -126,4 +126,4 @@ class EmailSender(EmailSenderInterface):
         template = self._env.get_template(self._password_complete_email_template_name)
         html_content = template.render(email=email, login_link=login_link)
         subject = "Your Password Has Been Successfully Reset"
-        await self._send_email(email, subject, html_content)
+        await self.send_email(email, subject, html_content)

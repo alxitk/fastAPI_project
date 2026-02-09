@@ -42,8 +42,8 @@ def get_current_user_id(
     """
     try:
         payload = jwt_manager.decode_access_token(credentials.credentials)
-        user_id: int = payload.get("user_id")
-        if user_id is None:
+        user_id = payload.get("user_id")
+        if not isinstance(user_id, int):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload"
             )

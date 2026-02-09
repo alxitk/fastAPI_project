@@ -12,7 +12,7 @@ from app.modules.movies.schemas.movie_schema import (
     MovieListResponseSchema,
     MovieDetailSchema,
     GenreWithCountSchema,
-    StarWithCountSchema,
+    StarWithCountSchema, MovieListItemSchema,
 )
 from app.modules.movies.services.movie_service import MovieService
 from app.modules.users.models.user import User
@@ -70,7 +70,7 @@ async def get_movie_list(
     total_pages = (total_items + per_page - 1) // per_page
 
     return MovieListResponseSchema(
-        movies=movies,
+        movies=[MovieListItemSchema.model_validate(movie) for movie in movies],
         prev_page=(
             f"/cinema/movies/?page={page - 1}&per_page={per_page}" if page > 1 else None
         ),

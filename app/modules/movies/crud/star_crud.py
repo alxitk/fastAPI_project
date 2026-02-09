@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Sequence
 
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,7 +26,7 @@ async def get_star(db: AsyncSession, star_id: int) -> Star | None:
     return result.scalar_one_or_none()
 
 
-async def get_star_list(db: AsyncSession) -> list[Star]:
+async def get_star_list(db: AsyncSession) -> Sequence[Star]:
     """
     Get a list of stars.
     """
@@ -92,7 +92,7 @@ async def get_movies_by_star(
     star_id: int,
     offset: int = 0,
     limit: int = 20,
-) -> List[Movie]:
+) -> Sequence[Movie]:
     """
     Retrieve a paginated list of movies with a specific star.
     """

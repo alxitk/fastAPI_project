@@ -76,12 +76,12 @@ class MovieService:
 
     async def _get_or_create_entity(self, model: Type[T], name: str) -> T:
         """Get model or create new one by name."""
-        stmt = select(model).where(model.name == name)
+        stmt = select(model).where(model.name == name)  # type: ignore[attr-defined]
         result = await self._db.execute(stmt)
         entity = result.scalars().first()
 
         if not entity:
-            entity = model(name=name)
+            entity = model(name=name)  # type: ignore[call-arg]
             self._db.add(entity)
             await self._db.flush()
 
@@ -332,7 +332,8 @@ class MovieService:
 
     async def list_stars(self) -> list[Star]:
         """Get list of all stars."""
-        return await get_star_list(self._db)
+        stars = await get_star_list(self._db)
+        return list(stars)
 
     async def list_stars_with_count(self) -> list[StarWithCountSchema]:
         """Get list of stars with movie counts."""
@@ -364,4 +365,5 @@ class MovieService:
         self, star_id: int, offset: int = 0, limit: int = 20
     ) -> list[Movie]:
         """Get movies filtered by star."""
-        return await get_movies_by_star(self._db, star_id, offset, limit)
+        movies = await get_movies_by_star(self._db, star_id, offset, limit)
+        return list(movies)

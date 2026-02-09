@@ -1,3 +1,6 @@
+from typing import cast
+
+from sqlalchemy.engine.cursor import CursorResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete as sql_delete
 
@@ -84,7 +87,7 @@ async def activate(db: AsyncSession, user_id: int) -> bool:
         True if user was activated, otherwise False.
     """
     stmt = update(User).where(User.id == user_id).values(is_active=True)
-    result = await db.execute(stmt)
+    result = cast(CursorResult, await db.execute(stmt))
     return result.rowcount > 0
 
 
@@ -100,7 +103,7 @@ async def deactivate(db: AsyncSession, user_id: int) -> bool:
         True if user was deactivated, otherwise False.
     """
     stmt = update(User).where(User.id == user_id).values(is_active=False)
-    result = await db.execute(stmt)
+    result = cast(CursorResult, await db.execute(stmt))
     return result.rowcount > 0
 
 
@@ -119,7 +122,7 @@ async def set_password(db: AsyncSession, user_id: int, hashed_password: str) -> 
     stmt = (
         update(User).where(User.id == user_id).values(hashed_password=hashed_password)
     )
-    result = await db.execute(stmt)
+    result = cast(CursorResult, await db.execute(stmt))
     return result.rowcount > 0
 
 
@@ -136,7 +139,7 @@ async def change_group(db: AsyncSession, user_id: int, group_id: int) -> bool:
         True if group was changed, otherwise False.
     """
     stmt = update(User).where(User.id == user_id).values(group_id=group_id)
-    result = await db.execute(stmt)
+    result = cast(CursorResult, await db.execute(stmt))
     return result.rowcount > 0
 
 
@@ -152,5 +155,5 @@ async def delete(db: AsyncSession, user_id: int) -> bool:
         True if user was deleted, otherwise False.
     """
     stmt = sql_delete(User).where(User.id == user_id)
-    result = await db.execute(stmt)
+    result = cast(CursorResult, await db.execute(stmt))
     return result.rowcount > 0

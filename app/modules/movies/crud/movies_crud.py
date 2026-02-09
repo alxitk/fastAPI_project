@@ -56,7 +56,8 @@ async def count_movies(
             )
         )
 
-    return await db.scalar(stmt)
+    result = await db.scalar(stmt)
+    return result or 0
 
 
 async def get_movies(
@@ -69,7 +70,7 @@ async def get_movies(
     sort_by: str | None = None,
     order: str = "asc",
     search: str | None = None,
-) -> List[Movie]:
+) -> list[Movie]:
     """
     Retrieve a paginated list of movies with optional filters and sorting.
     """
@@ -113,7 +114,7 @@ async def get_movies(
     }
     if sort_by:
         column = sort_map.get(sort_by)
-        if column:
+        if column is not None:
             stmt = stmt.order_by(
                 desc(column) if order == "desc" else asc(column),
             )
@@ -121,7 +122,7 @@ async def get_movies(
     stmt = stmt.offset(offset).limit(limit)
 
     result = await db.execute(stmt)
-    return result.scalars().all()
+    return list(result.scalars().all())
 
 
 async def create_movie(
@@ -190,8 +191,8 @@ async def update_movie(
     if movie_data.genres is not None:
         movie.genres.clear()
         for name in movie_data.genres:
-            result = await db.execute(select(Genre).where(Genre.name == name))
-            genre = result.scalar_one_or_none()
+            genre_result = await db.execute(select(Genre).where(Genre.name == name))
+            genre = genre_result.scalar_one_or_none()
             if not genre:
                 genre = Genre(name=name)
                 db.add(genre)
@@ -201,8 +202,8 @@ async def update_movie(
     if movie_data.stars is not None:
         movie.stars.clear()
         for name in movie_data.stars:
-            result = await db.execute(select(Star).where(Star.name == name))
-            star = result.scalar_one_or_none()
+            star_result = await db.execute(select(Star).where(Star.name == name))
+            star = star_result.scalar_one_or_none()
             if not star:
                 star = Star(name=name)
                 db.add(star)
@@ -212,8 +213,8 @@ async def update_movie(
     if movie_data.directors is not None:
         movie.directors.clear()
         for name in movie_data.directors:
-            result = await db.execute(select(Director).where(Director.name == name))
-            director = result.scalar_one_or_none()
+            director_result = await db.execute(select(Director).where(Director.name == name))
+            director = director_result.scalar_one_or_none()
             if not director:
                 director = Director(name=name)
                 db.add(director)
@@ -346,7 +347,7 @@ async def list_favorites(
     sort_by: str | None = None,
     order: str = "asc",
     search: str | None = None,
-) -> List[Movie]:
+) -> list[Movie]:
     """
     Retrieve a paginated list of user's favorite movies with optional filters and sorting.
     """
@@ -396,7 +397,7 @@ async def list_favorites(
     stmt = stmt.offset(offset).limit(limit)
 
     result = await db.execute(stmt)
-    return result.scalars().all()
+    return list(result.scalars().all())
 
 
 async def create_comment(
@@ -445,7 +446,7 @@ async def get_movies_by_genre(
     genre_id: int,
     offset: int = 0,
     limit: int = 20,
-) -> List[Movie]:
+) -> list[Movie]:
     """
     Retrieve a paginated list of movies belonging to a specific genre.
     """
@@ -457,4 +458,4 @@ async def get_movies_by_genre(
         .limit(limit)
     )
     result = await db.execute(stmt)
-    return result.scalars().all()
+    return list(result.scalars().all())
