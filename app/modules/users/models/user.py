@@ -7,7 +7,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
 from app.modules.users.models.enums import UserGroupEnum, GenderEnum
-from app.modules.users.models.token import ActivationTokenModel, PasswordResetTokenModel, RefreshTokenModel
+from app.modules.users.models.token import (
+    ActivationTokenModel,
+    PasswordResetTokenModel,
+    RefreshTokenModel,
+)
 
 
 class UserGroupModel(Base):

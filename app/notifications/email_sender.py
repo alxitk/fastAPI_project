@@ -40,9 +40,7 @@ class EmailSender(EmailSenderInterface):
 
         self._env = Environment(loader=FileSystemLoader(template_dir))
 
-    async def send_email(
-        self, recipient: str, subject: str, html_content: str
-    ) -> None:
+    async def send_email(self, recipient: str, subject: str, html_content: str) -> None:
         """
         Asynchronously send an email with the given subject and HTML content.
 

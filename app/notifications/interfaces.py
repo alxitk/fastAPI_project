@@ -50,9 +50,7 @@ class EmailSenderInterface(ABC):
         pass
 
     @abstractmethod
-    async def send_email(
-            self, recipient: str, subject: str, html_content: str
-    ) -> None:
+    async def send_email(self, recipient: str, subject: str, html_content: str) -> None:
         """
         Send a generic email with custom subject and content.
 

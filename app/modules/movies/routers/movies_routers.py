@@ -12,7 +12,8 @@ from app.modules.movies.schemas.movie_schema import (
     MovieListResponseSchema,
     MovieDetailSchema,
     GenreWithCountSchema,
-    StarWithCountSchema, MovieListItemSchema,
+    StarWithCountSchema,
+    MovieListItemSchema,
 )
 from app.modules.movies.services.movie_service import MovieService
 from app.modules.users.models.user import User

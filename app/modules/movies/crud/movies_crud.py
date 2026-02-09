@@ -213,7 +213,9 @@ async def update_movie(
     if movie_data.directors is not None:
         movie.directors.clear()
         for name in movie_data.directors:
-            director_result = await db.execute(select(Director).where(Director.name == name))
+            director_result = await db.execute(
+                select(Director).where(Director.name == name)
+            )
             director = director_result.scalar_one_or_none()
             if not director:
                 director = Director(name=name)

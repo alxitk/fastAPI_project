@@ -65,7 +65,9 @@ class RegistrationService:
         if existing_user:
             raise HTTPException(status_code=409, detail="User already exists")
 
-        group_stmt = select(UserGroupModel).where(UserGroupModel.name == UserGroupEnum.USER)
+        group_stmt = select(UserGroupModel).where(
+            UserGroupModel.name == UserGroupEnum.USER
+        )
         result = await self._db.execute(group_stmt)
         user_group = result.scalars().first()
         if not user_group:

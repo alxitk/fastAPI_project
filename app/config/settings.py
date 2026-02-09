@@ -34,10 +34,10 @@ class Settings(BaseAppSettings):
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "fastapi_db")
 
     SECRET_KEY_ACCESS: str = (
-            os.getenv("SECRET_KEY_ACCESS") or binascii.hexlify(os.urandom(32)).decode()
+        os.getenv("SECRET_KEY_ACCESS") or binascii.hexlify(os.urandom(32)).decode()
     )
     SECRET_KEY_REFRESH: str = (
-            os.getenv("SECRET_KEY_REFRESH") or binascii.hexlify(os.urandom(32)).decode()
+        os.getenv("SECRET_KEY_REFRESH") or binascii.hexlify(os.urandom(32)).decode()
     )
     JWT_SIGNING_ALGORITHM: str = os.getenv("JWT_SIGNING_ALGORITHM", "HS256")
 
