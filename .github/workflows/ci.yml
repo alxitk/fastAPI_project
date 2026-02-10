@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - feature/ci
+  pull_request:
+    branches:
+      - feature/ci
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build Docker image
+        run: docker build -t myapp:test .
+
+      - name: Run flake8
+        run: |
+          docker run --rm myapp:test flake8 .
+
+      - name: Run black
+        run: |          
+          docker run --rm myapp:test black --check .                          
+
+      - name: Run mypy
+        run: |                    
+          docker run --rm myapp:test mypy .          
+
+      - name: Run tests
+        run: |                              
+          docker run --rm myapp:test pytest --cov=.

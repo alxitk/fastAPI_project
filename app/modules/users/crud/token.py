@@ -1,5 +1,8 @@
 from datetime import datetime, timezone
+from typing import cast
+
 from sqlalchemy import select, delete, func
+from sqlalchemy.engine.cursor import CursorResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.users.models.token import (
@@ -40,18 +43,24 @@ async def is_token_valid(db: AsyncSession, token: str) -> bool:
 
 async def delete_by_user_id(db: AsyncSession, user_id: int) -> int:
     """Deletes all activation tokens for user. Returns count of deleted tokens."""
-    result = await db.execute(
-        delete(ActivationTokenModel).where(ActivationTokenModel.user_id == user_id)
+    result = cast(
+        CursorResult,
+        await db.execute(
+            delete(ActivationTokenModel).where(ActivationTokenModel.user_id == user_id)
+        ),
     )
     return result.rowcount or 0
 
 
 async def delete_expired(db: AsyncSession) -> int:
     """Deletes all expired activation tokens. Returns count of deleted tokens."""
-    result = await db.execute(
-        delete(ActivationTokenModel).where(
-            ActivationTokenModel.expires_at < datetime.now(timezone.utc)
-        )
+    result = cast(
+        CursorResult,
+        await db.execute(
+            delete(ActivationTokenModel).where(
+                ActivationTokenModel.expires_at < datetime.now(timezone.utc)
+            )
+        ),
     )
     return result.rowcount or 0
 
@@ -90,30 +99,39 @@ async def get_password_reset_by_token(
 
 async def is_password_reset_token_valid(db: AsyncSession, token: str) -> bool:
     """Checks if password reset token exists and is not expired."""
-    result = await db.execute(
-        select(PasswordResetTokenModel)
-        .where(PasswordResetTokenModel.token == token)
-        .where(PasswordResetTokenModel.expires_at > datetime.now(timezone.utc))
+    result = cast(
+        CursorResult,
+        await db.execute(
+            select(PasswordResetTokenModel)
+            .where(PasswordResetTokenModel.token == token)
+            .where(PasswordResetTokenModel.expires_at > datetime.now(timezone.utc))
+        ),
     )
     return result.scalar_one_or_none() is not None
 
 
 async def delete_password_reset_by_user_id(db: AsyncSession, user_id: int) -> int:
     """Deletes all password reset tokens for user. Returns count of deleted tokens."""
-    result = await db.execute(
-        delete(PasswordResetTokenModel).where(
-            PasswordResetTokenModel.user_id == user_id
-        )
+    result = cast(
+        CursorResult,
+        await db.execute(
+            delete(PasswordResetTokenModel).where(
+                PasswordResetTokenModel.user_id == user_id
+            )
+        ),
     )
     return result.rowcount or 0
 
 
 async def delete_expired_password_reset_tokens(db: AsyncSession) -> int:
     """Deletes all expired password reset tokens. Returns count of deleted tokens."""
-    result = await db.execute(
-        delete(PasswordResetTokenModel).where(
-            PasswordResetTokenModel.expires_at < datetime.now(timezone.utc)
-        )
+    result = cast(
+        CursorResult,
+        await db.execute(
+            delete(PasswordResetTokenModel).where(
+                PasswordResetTokenModel.expires_at < datetime.now(timezone.utc)
+            )
+        ),
     )
     return result.rowcount or 0
 
@@ -152,28 +170,37 @@ async def get_refresh_token_by_token(
 
 async def is_refresh_token_valid(db: AsyncSession, token: str) -> bool:
     """Checks if refresh token exists and is not expired."""
-    result = await db.execute(
-        select(RefreshTokenModel)
-        .where(RefreshTokenModel.token == token)
-        .where(RefreshTokenModel.expires_at > datetime.now(timezone.utc))
+    result = cast(
+        CursorResult,
+        await db.execute(
+            select(RefreshTokenModel)
+            .where(RefreshTokenModel.token == token)
+            .where(RefreshTokenModel.expires_at > datetime.now(timezone.utc))
+        ),
     )
     return result.scalar_one_or_none() is not None
 
 
 async def delete_refresh_token_by_user_id(db: AsyncSession, user_id: int) -> int:
     """Deletes all refresh tokens for user. Returns count of deleted tokens."""
-    result = await db.execute(
-        delete(RefreshTokenModel).where(RefreshTokenModel.user_id == user_id)
+    result = cast(
+        CursorResult,
+        await db.execute(
+            delete(RefreshTokenModel).where(RefreshTokenModel.user_id == user_id)
+        ),
     )
     return result.rowcount or 0
 
 
 async def delete_expired_refresh_tokens(db: AsyncSession) -> int:
     """Deletes all expired refresh tokens. Returns count of deleted tokens."""
-    result = await db.execute(
-        delete(RefreshTokenModel).where(
-            RefreshTokenModel.expires_at < datetime.now(timezone.utc)
-        )
+    result = cast(
+        CursorResult,
+        await db.execute(
+            delete(RefreshTokenModel).where(
+                RefreshTokenModel.expires_at < datetime.now(timezone.utc)
+            )
+        ),
     )
     return result.rowcount or 0
 

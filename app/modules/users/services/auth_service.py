@@ -20,6 +20,7 @@ class AuthService:
     token refresh, and logout. It manages user credentials verification, token creation,
     and token revocation.
     """
+
     def __init__(
         self,
         db: AsyncSession,
@@ -28,7 +29,7 @@ class AuthService:
         user_service: UserService,
         email_sender: EmailSenderInterface | None = None,
         base_url: str = "http://localhost:8000",
-    ):
+    ) -> None:
         self._db = db
         self._jwt_manager = jwt_manager
         self._login_time_days = login_time_days

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 
 from app.config.dependencies import get_auth_service, get_current_user_id
 from app.modules.users.schemas.token_schema import (
@@ -19,7 +19,7 @@ auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 async def login(
     data: UserLoginRequestSchema,
     auth_service: AuthService = Depends(get_auth_service),
-):
+) -> UserLoginResponseSchema:
     access, refresh = await auth_service.login(data.email, data.password)
     return UserLoginResponseSchema(
         access_token=access,
@@ -33,7 +33,7 @@ async def login(
 async def refresh_token(
     data: TokenRefreshRequestSchema,
     auth_service: AuthService = Depends(get_auth_service),
-):
+) -> TokenRefreshResponseSchema:
     access = await auth_service.refresh_access_token(data.refresh_token)
     return TokenRefreshResponseSchema(
         access_token=access,
@@ -46,7 +46,7 @@ async def refresh_token(
 async def logout(
     data: TokenRefreshRequestSchema,
     auth_service: AuthService = Depends(get_auth_service),
-):
+) -> MessageResponseSchema:
     await auth_service.logout(data.refresh_token)
     return MessageResponseSchema(message="Logged out successfully.")
 
@@ -55,6 +55,6 @@ async def logout(
 async def logout_all(
     user_id: int = Depends(get_current_user_id),
     auth_service: AuthService = Depends(get_auth_service),
-):
+) -> MessageResponseSchema:
     await auth_service.logout_all_current_user(user_id)
     return MessageResponseSchema(message="Logged out from all devices.")

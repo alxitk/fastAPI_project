@@ -7,6 +7,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
 from app.modules.users.models.enums import UserGroupEnum, GenderEnum
+from app.modules.users.models.token import (
+    ActivationTokenModel,
+    PasswordResetTokenModel,
+    RefreshTokenModel,
+)
 
 
 class UserGroupModel(Base):
@@ -59,12 +64,10 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
-    password_reset_tokens: Mapped[list["PasswordResetTokenModel"]] = (
-        relationship(  # ← исправлено
-            "PasswordResetTokenModel",
-            back_populates="user",
-            cascade="all, delete-orphan",
-        )
+    password_reset_tokens: Mapped[list["PasswordResetTokenModel"]] = relationship(
+        "PasswordResetTokenModel",
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
 
     refresh_tokens: Mapped[list["RefreshTokenModel"]] = relationship(

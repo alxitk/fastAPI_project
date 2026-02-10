@@ -33,7 +33,7 @@ class PasswordService:
         login_time_days: int,
         email_sender: EmailSenderInterface | None = None,
         base_url: str = "http://localhost:8000",
-    ):
+    ) -> None:
         self._db = db
         self._user_service = user_service
         self._jwt_manager = jwt_manager
@@ -150,7 +150,11 @@ class PasswordService:
         await self._db.commit()
 
         if self._email_sender:
-            reset_link = f"{self._base_url}/auth/password-reset/complete?email={email}&token={password_reset_token.token}"
+            reset_link = (
+                f""
+                f"{self._base_url}/auth/password-reset/complete?email="
+                f"{email}&token={password_reset_token.token}"
+            )
             await self._email_sender.send_password_reset_email(email, reset_link)
 
     async def reset_password(

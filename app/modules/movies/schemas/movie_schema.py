@@ -5,10 +5,19 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from app.modules.movies.schemas.examples.movies_schema_examples import director_schema_example, star_schema_example, \
-    genre_schema_example, certification_schema_example, movie_list_response_schema_example, movie_list_item_example, \
-    movie_create_schema_example, movie_detail_schema_example, movie_comment_schema_example, \
-    genre_with_count_schema_example, star_with_count_schema_example
+from app.modules.movies.schemas.examples.movies_schema_examples import (
+    director_schema_example,
+    star_schema_example,
+    genre_schema_example,
+    certification_schema_example,
+    movie_list_response_schema_example,
+    movie_list_item_example,
+    movie_create_schema_example,
+    movie_detail_schema_example,
+    movie_comment_schema_example,
+    genre_with_count_schema_example,
+    star_with_count_schema_example,
+)
 
 
 class GenreSchema(BaseModel):
@@ -17,11 +26,7 @@ class GenreSchema(BaseModel):
 
     model_config = {
         "from_attributes": True,
-        "json_schema_extra": {
-            "examples": [
-                genre_schema_example
-            ]
-        }
+        "json_schema_extra": {"examples": [genre_schema_example]},  # type: ignore[list-item]
     }
 
 
@@ -31,11 +36,7 @@ class StarSchema(BaseModel):
 
     model_config = {
         "from_attributes": True,
-        "json_schema_extra": {
-            "examples": [
-                star_schema_example
-            ]
-        }
+        "json_schema_extra": {"examples": [star_schema_example]},  # type: ignore[list-item]
     }
 
 
@@ -45,11 +46,7 @@ class DirectorSchema(BaseModel):
 
     model_config = {
         "from_attributes": True,
-        "json_schema_extra": {
-            "examples": [
-                director_schema_example
-            ]
-        }
+        "json_schema_extra": {"examples": [director_schema_example]},  # type: ignore[list-item]
     }
 
 
@@ -59,11 +56,7 @@ class CertificationSchema(BaseModel):
 
     model_config = {
         "from_attributes": True,
-        "json_schema_extra": {
-            "examples": [
-                certification_schema_example
-            ]
-        }
+        "json_schema_extra": {"examples": [certification_schema_example]},  # type: ignore[list-item]
     }
 
 
@@ -80,11 +73,7 @@ class MovieCommentSchema(BaseModel):
 
     model_config = {
         "from_attributes": True,
-        "json_schema_extra": {
-            "examples": [
-                movie_comment_schema_example
-            ]
-        }
+        "json_schema_extra": {"examples": [movie_comment_schema_example]},  # type: ignore[list-item]
     }
 
 
@@ -97,9 +86,7 @@ class MovieBaseSchema(BaseModel):
     description: str = Field(..., max_length=255)
     price: decimal.Decimal = Field(..., max_digits=10, decimal_places=2)
 
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = {"from_attributes": True}
 
 
 class MovieListItemSchema(BaseModel):
@@ -111,15 +98,12 @@ class MovieListItemSchema(BaseModel):
 
     model_config = {
         "from_attributes": True,
-        "json_schema_extra": {
-            "examples": [
-                movie_list_item_example
-            ]
-        }
+        "json_schema_extra": {"examples": [movie_list_item_example]},  # type: ignore[list-item]
     }
 
 
 class MovieDetailSchema(MovieBaseSchema):
+    id: int
     genres: list[GenreSchema]
     stars: list[StarSchema]
     directors: list[DirectorSchema]
@@ -129,11 +113,7 @@ class MovieDetailSchema(MovieBaseSchema):
 
     model_config = {
         "from_attributes": True,
-        "json_schema_extra": {
-            "examples": [
-                movie_detail_schema_example
-            ]
-        }
+        "json_schema_extra": {"examples": [movie_detail_schema_example]},  # type: ignore[list-item]
     }
 
 
@@ -146,11 +126,7 @@ class MovieListResponseSchema(BaseModel):
 
     model_config = {
         "from_attributes": True,
-        "json_schema_extra": {
-            "examples": [
-                movie_list_response_schema_example
-            ]
-        }
+        "json_schema_extra": {"examples": [movie_list_response_schema_example]},  # type: ignore[list-item]
     }
 
 
@@ -169,11 +145,7 @@ class MovieCreateSchema(BaseModel):
 
     model_config = {
         "from_attributes": True,
-        "json_schema_extra": {
-            "examples": [
-                movie_create_schema_example
-            ]
-        }
+        "json_schema_extra": {"examples": [movie_create_schema_example]},  # type: ignore[list-item]
     }
 
 
@@ -199,11 +171,7 @@ class GenreWithCountSchema(BaseModel):
 
     model_config = {
         "from_attributes": True,
-        "json_schema_extra": {
-            "examples": [
-                genre_with_count_schema_example
-            ]
-        }
+        "json_schema_extra": {"examples": [genre_with_count_schema_example]},  # type: ignore[list-item]
     }
 
 
@@ -214,9 +182,5 @@ class StarWithCountSchema(BaseModel):
 
     model_config = {
         "from_attributes": True,
-        "json_schema_extra": {
-            "examples": [
-                star_with_count_schema_example
-            ]
-        }
+        "json_schema_extra": {"examples": [star_with_count_schema_example]},  # type: ignore[list-item]
     }

@@ -1,11 +1,17 @@
-from celery import Celery
+import os
 
+from celery import Celery
+from dotenv import load_dotenv
+
+load_dotenv()
 
 celery_app = Celery(
     "app",
-    broker="redis://redis:6379/0",
-    backend="redis://redis:6379/1",
+    broker=os.getenv("CELERY_BROKER_URL"),
+    backend=os.getenv("CELERY_RESULT_BACKEND"),
 )
+
+celery_app.autodiscover_tasks(["app.tasks"])
 
 celery_app.conf.update(
     timezone="UTC",
@@ -17,6 +23,3 @@ celery_app.conf.update(
         },
     },
 )
-
-
-import app.tasks.cleanup_tokens  # noqa

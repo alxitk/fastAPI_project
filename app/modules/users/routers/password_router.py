@@ -16,7 +16,7 @@ password_router = APIRouter(prefix="/auth", tags=["Password"])
 async def request_reset(
     data: PasswordResetRequestSchema,
     service: PasswordService = Depends(get_password_service),
-):
+) -> MessageResponseSchema:
     await service.send_password_reset_email(data.email)
     return MessageResponseSchema(
         message="If you are registered, you will receive an email."
@@ -27,7 +27,7 @@ async def request_reset(
 async def complete_reset(
     data: PasswordResetCompleteRequestSchema,
     service: PasswordService = Depends(get_password_service),
-):
+) -> MessageResponseSchema:
     await service.reset_password_by_token(
         data.email,
         data.token,
@@ -41,7 +41,7 @@ async def change_password(
     data: ChangePasswordSchema,
     user_id: int = Depends(get_current_user_id),
     service: PasswordService = Depends(get_password_service),
-):
+) -> MessageResponseSchema:
     await service.change_password(
         user_id=user_id,
         old_password=data.old_password,

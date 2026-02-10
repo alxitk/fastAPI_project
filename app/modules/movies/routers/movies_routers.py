@@ -3,10 +3,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.dependencies import get_current_user
 from app.database.session import get_db
+from app.modules.movies.models.movie_models import (
+    Movie,
+    MovieFavorites,
+    MovieComment,
+)
 from app.modules.movies.schemas.movie_schema import (
     MovieListResponseSchema,
     MovieDetailSchema,
-    GenreWithCountSchema, StarWithCountSchema,
+    GenreWithCountSchema,
+    StarWithCountSchema,
+    MovieListItemSchema,
 )
 from app.modules.movies.services.movie_service import MovieService
 from app.modules.users.models.user import User
@@ -64,7 +71,7 @@ async def get_movie_list(
     total_pages = (total_items + per_page - 1) // per_page
 
     return MovieListResponseSchema(
-        movies=movies,
+        movies=[MovieListItemSchema.model_validate(movie) for movie in movies],
         prev_page=(
             f"/cinema/movies/?page={page - 1}&per_page={per_page}" if page > 1 else None
         ),
@@ -86,15 +93,11 @@ async def get_movie_list(
     responses={
         404: {
             "description": "Movie not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Movie not found"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Movie not found"}}},
         }
     },
 )
-async def get_movie(movie_id: int, db: AsyncSession = Depends(get_db)):
+async def get_movie(movie_id: int, db: AsyncSession = Depends(get_db)) -> Movie:
     service = MovieService(db)
     movie = await service.get_movie_by_id(movie_id)
     return movie
@@ -108,18 +111,12 @@ async def get_movie(movie_id: int, db: AsyncSession = Depends(get_db)):
         401: {
             "description": "Authentication required",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Not authenticated"}
-                }
+                "application/json": {"example": {"detail": "Not authenticated"}}
             },
         },
         404: {
             "description": "Movie not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Movie not found"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Movie not found"}}},
         },
     },
 )
@@ -128,7 +125,7 @@ async def like_movie(
     like: bool = True,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> dict[str, int]:
     service = MovieService(db)
     movie_like = await service.like_movie(current_user.id, movie_id, like)
     return {"movie_id": movie_id, "value": movie_like.value}
@@ -142,18 +139,12 @@ async def like_movie(
         401: {
             "description": "Authentication required",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Not authenticated"}
-                }
+                "application/json": {"example": {"detail": "Not authenticated"}}
             },
         },
         404: {
             "description": "Movie not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Movie not found"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Movie not found"}}},
         },
     },
 )
@@ -161,7 +152,7 @@ async def add_favorite(
     movie_id: int,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> MovieFavorites:
     service = MovieService(db)
     favorite = await service.add_to_favorites(current_user.id, movie_id)
     return favorite
@@ -175,18 +166,12 @@ async def add_favorite(
         401: {
             "description": "Authentication required",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Not authenticated"}
-                }
+                "application/json": {"example": {"detail": "Not authenticated"}}
             },
         },
         404: {
             "description": "Movie not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Movie not found"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Movie not found"}}},
         },
     },
 )
@@ -194,7 +179,7 @@ async def remove_favorite(
     movie_id: int,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> MovieFavorites | None:
     service = MovieService(db)
     favorite = await service.remove_from_favorites(current_user.id, movie_id)
     return favorite
@@ -208,9 +193,7 @@ async def remove_favorite(
         401: {
             "description": "Authentication required",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Not authenticated"}
-                }
+                "application/json": {"example": {"detail": "Not authenticated"}}
             },
         }
     },
@@ -226,7 +209,7 @@ async def list_favorites(
     sort_by: str | None = Query(None, pattern="^(price|year|imdb)$"),
     order: str = Query("asc", pattern="^(asc|desc)$"),
     search: str | None = Query(None),
-):
+) -> list[Movie]:
     service = MovieService(db)
     favorites = await service.get_favorites(
         user_id=current_user.id,
@@ -250,18 +233,12 @@ async def list_favorites(
         401: {
             "description": "Authentication required",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Not authenticated"}
-                }
+                "application/json": {"example": {"detail": "Not authenticated"}}
             },
         },
         404: {
             "description": "Movie or parent comment not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Movie not found"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Movie not found"}}},
         },
     },
 )
@@ -271,7 +248,7 @@ async def add_comment(
     parent_id: int | None = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> MovieComment:
     service = MovieService(db)
     return await service.add_comment(
         user_id=current_user.id,
@@ -290,14 +267,12 @@ async def add_comment(
         404: {
             "description": "Genres not found",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Genres not found"}
-                }
+                "application/json": {"example": {"detail": "Genres not found"}}
             },
         }
     },
 )
-async def list_genres(db: AsyncSession = Depends(get_db)):
+async def list_genres(db: AsyncSession = Depends(get_db)) -> list[dict]:
     service = MovieService(db)
     return await service.list_genres()
 
@@ -309,11 +284,7 @@ async def list_genres(db: AsyncSession = Depends(get_db)):
     responses={
         404: {
             "description": "Genre not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Genre not found"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Genre not found"}}},
         }
     },
 )
@@ -322,7 +293,7 @@ async def movies_by_genre(
     page: int = Query(1, ge=1),
     per_page: int = Query(10, ge=1, le=20),
     db: AsyncSession = Depends(get_db),
-):
+) -> list[Movie]:
     service = MovieService(db)
     offset = (page - 1) * per_page
     return await service.get_movies_by_genre(genre_id, offset, per_page)
@@ -336,15 +307,13 @@ async def movies_by_genre(
     responses={
         404: {
             "description": "Stars not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Stars not found"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Stars not found"}}},
         }
     },
 )
-async def get_stars_with_count(db: AsyncSession = Depends(get_db)):
+async def get_stars_with_count(
+    db: AsyncSession = Depends(get_db),
+) -> list[StarWithCountSchema]:
     service = MovieService(db)
     return await service.list_stars_with_count()
 
@@ -356,11 +325,7 @@ async def get_stars_with_count(db: AsyncSession = Depends(get_db)):
     responses={
         404: {
             "description": "Star not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Star not found"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Star not found"}}},
         }
     },
 )
@@ -369,7 +334,7 @@ async def movies_by_star(
     page: int = Query(1, ge=1),
     per_page: int = Query(10, ge=1, le=20),
     db: AsyncSession = Depends(get_db),
-):
+) -> list[Movie]:
     service = MovieService(db)
     offset = (page - 1) * per_page
     return await service.get_movies_by_star(star_id, offset, per_page)

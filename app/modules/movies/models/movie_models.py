@@ -3,11 +3,23 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import Integer, String, Float, Text, Numeric, ForeignKey, UniqueConstraint
+from sqlalchemy import (
+    Integer,
+    String,
+    Float,
+    Text,
+    Numeric,
+    ForeignKey,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
-from app.modules.movies.models.associations import movie_genres, movie_stars, movie_directors
+from app.modules.movies.models.associations import (
+    movie_genres,
+    movie_stars,
+    movie_directors,
+)
 
 
 class Genre(Base):
@@ -126,7 +138,7 @@ class MovieLike(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     movie_id: Mapped[int] = mapped_column(ForeignKey("movies.id"))
-    value: Mapped[int] = mapped_column(default=1) # 1 = like, -1 = dislike
+    value: Mapped[int] = mapped_column(default=1)  # 1 = like, -1 = dislike
 
     user = relationship("User", back_populates="likes")
     movie = relationship("Movie", back_populates="likes")
@@ -146,7 +158,7 @@ class MovieFavorites(Base):
     user = relationship("User", back_populates="favorites")
     movie = relationship("Movie", back_populates="favorites")
 
-    __table_args__ = (UniqueConstraint('user_id', 'movie_id', name='uq_user_favorite'),)
+    __table_args__ = (UniqueConstraint("user_id", "movie_id", name="uq_user_favorite"),)
 
 
 class MovieComment(Base):
@@ -170,9 +182,7 @@ class MovieComment(Base):
 
     text: Mapped[str] = mapped_column(Text, nullable=False)
 
-    created_at: Mapped[datetime] = mapped_column(
-        default=datetime.utcnow
-    )
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
     user = relationship("User", back_populates="movie_comments")
     movie = relationship("Movie", back_populates="comments")

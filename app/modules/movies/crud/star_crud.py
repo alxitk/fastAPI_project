@@ -1,9 +1,9 @@
-from typing import List
+from typing import List, Sequence
 
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.movies.models.associations import movie_genres, movie_stars
+from app.modules.movies.models.associations import movie_stars
 from app.modules.movies.models.movie_models import Star, Movie
 
 
@@ -26,7 +26,7 @@ async def get_star(db: AsyncSession, star_id: int) -> Star | None:
     return result.scalar_one_or_none()
 
 
-async def get_star_list(db: AsyncSession) -> list[Star]:
+async def get_star_list(db: AsyncSession) -> Sequence[Star]:
     """
     Get a list of stars.
     """
@@ -88,11 +88,11 @@ async def list_stars_with_count(
 
 
 async def get_movies_by_star(
-        db: AsyncSession,
-        star_id: int,
-        offset: int = 0,
-        limit: int = 20,
-) -> List[Movie]:
+    db: AsyncSession,
+    star_id: int,
+    offset: int = 0,
+    limit: int = 20,
+) -> Sequence[Movie]:
     """
     Retrieve a paginated list of movies with a specific star.
     """

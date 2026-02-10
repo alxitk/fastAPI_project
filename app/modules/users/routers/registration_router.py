@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 
 from app.config.dependencies import (
     get_registration_service,
     get_user_service,
     get_current_admin_user,
 )
+from app.modules.users.models.user import User
 from app.modules.users.schemas.user_schema import (
     UserRegistrationRequestSchema,
     UserActivationRequestSchema,
@@ -21,7 +22,7 @@ reg_router = APIRouter(prefix="/auth", tags=["Registration"])
 async def register(
     data: UserRegistrationRequestSchema,
     registration_service: RegistrationService = Depends(get_registration_service),
-):
+) -> MessageResponseSchema:
     await registration_service.register_user(
         email=data.email,
         password=data.password,
@@ -35,7 +36,7 @@ async def register(
 async def activate(
     data: UserActivationRequestSchema,
     registration_service: RegistrationService = Depends(get_registration_service),
-):
+) -> MessageResponseSchema:
     await registration_service.activate_user(data.email, data.token)
     return MessageResponseSchema(message="Account activated successfully.")
 
@@ -44,7 +45,7 @@ async def activate(
 async def resend_activation(
     data: TokenResendActivationRequestSchema,
     registration_service: RegistrationService = Depends(get_registration_service),
-):
+) -> MessageResponseSchema:
     await registration_service.resend_activation_token(data.email)
     return MessageResponseSchema(
         message="If your email exists, a new activation link has been sent."
@@ -58,8 +59,8 @@ async def resend_activation(
 async def admin_activate_user(
     user_id: int,
     user_service: UserService = Depends(get_user_service),
-    admin=Depends(get_current_admin_user),
-):
+    admin: User = Depends(get_current_admin_user),
+) -> MessageResponseSchema:
     await user_service.activate_user_by_admin(user_id)
     return MessageResponseSchema(message="User activated successfully by admin.")
 
@@ -72,8 +73,8 @@ async def admin_change_user_group(
     user_id: int,
     group_id: int,
     user_service: UserService = Depends(get_user_service),
-    admin=Depends(get_current_admin_user),
-):
+    admin: User = Depends(get_current_admin_user),
+) -> MessageResponseSchema:
     await user_service.change_user_group(
         user_id=user_id,
         group_id=group_id,

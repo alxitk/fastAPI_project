@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.dependencies import get_current_moderator_user, get_movie_service
-from app.database.session import get_db
+from app.modules.movies.models.movie_models import Genre, Star, Certification
 from app.modules.movies.schemas.movie_schema import (
     MovieCreateSchema,
     MovieDetailSchema,
-    MovieUpdateSchema, CertificationSchema, CertificationCreateSchema,
+    MovieUpdateSchema,
+    CertificationSchema,
+    CertificationCreateSchema,
 )
 from app.modules.movies.services.movie_service import MovieService
 
@@ -36,7 +37,7 @@ moderator_router = APIRouter(prefix="/moderator", tags=["Moderator"])
 async def create_genre(
     name: str,
     service: MovieService = Depends(get_movie_service),
-):
+) -> Genre:
     return await service.create_genre(name)
 
 
@@ -70,7 +71,7 @@ async def update_genre(
     genre_id: int,
     name: str,
     service: MovieService = Depends(get_movie_service),
-):
+) -> Genre:
     return await service.update_genre(genre_id, name)
 
 
@@ -97,7 +98,7 @@ async def update_genre(
 async def delete_genre(
     genre_id: int,
     service: MovieService = Depends(get_movie_service),
-):
+) -> dict[str, str]:
     return await service.delete_genre(genre_id)
 
 
@@ -162,7 +163,8 @@ async def update_movie(
     movie_data: MovieUpdateSchema,
     service: MovieService = Depends(get_movie_service),
 ) -> MovieDetailSchema:
-    return await service.update_movie(movie_id, movie_data)
+    movie = await service.update_movie(movie_id, movie_data)
+    return MovieDetailSchema.model_validate(movie)
 
 
 # async def delete_movie(db: AsyncSession, movie_id: int):
@@ -192,7 +194,7 @@ async def update_movie(
 async def create_star(
     name: str,
     service: MovieService = Depends(get_movie_service),
-):
+) -> Star:
     return await service.create_star(name)
 
 
@@ -215,9 +217,7 @@ async def create_star(
         },
         404: {
             "description": "Star not found.",
-            "content": {
-                "application/json": {"example": {"detail": "Star not found."}}
-            },
+            "content": {"application/json": {"example": {"detail": "Star not found."}}},
         },
     },
     status_code=200,
@@ -226,7 +226,7 @@ async def update_star(
     star_id: int,
     name: str,
     service: MovieService = Depends(get_movie_service),
-):
+) -> Star:
     return await service.update_star(star_id, name)
 
 
@@ -243,9 +243,7 @@ async def update_star(
         },
         404: {
             "description": "Star not found.",
-            "content": {
-                "application/json": {"example": {"detail": "Genre not found."}}
-            },
+            "content": {"application/json": {"example": {"detail": "Star not found."}}},
         },
     },
     status_code=200,
@@ -253,7 +251,7 @@ async def update_star(
 async def delete_star(
     star_id: int,
     service: MovieService = Depends(get_movie_service),
-):
+) -> dict[str, str]:
     return await service.delete_star(star_id)
 
 
@@ -281,6 +279,6 @@ async def delete_star(
 async def create_certification(
     certification_name: CertificationCreateSchema,
     service: MovieService = Depends(get_movie_service),
-):
+) -> Certification:
     certification = await service.create_certification(certification_name)
     return certification

@@ -1,41 +1,25 @@
-from types import SimpleNamespace
+genre_schema_example = {"id": 1, "genre": "Comedy"}
 
-genre_schema_example = {
-    "id": 1,
-    "genre": "Comedy"
-}
+star_schema_example = {"id": 1, "name": "Brad Pitt"}
 
-star_schema_example = {
-    "id": 1,
-    "name": "Brad Pitt"
-}
+director_schema_example = {"id": 1, "name": "GuyRichie"}
 
-director_schema_example = {
-    "id": 1,
-    "name": "GuyRichie"
-}
-
-certification_schema_example = {
-    "id": 1,
-    "name": "PG-13"
-}
+certification_schema_example = {"id": 1, "name": "PG-13"}
 
 movie_list_item_example = {
     "id": 1,
     "name": "Inception",
     "year": 2010,
     "imdb": 8.8,
-    "price": "9.99"
+    "price": "9.99",
 }
 
 movie_list_response_schema_example = {
-    "movies": [
-        movie_list_item_example
-    ],
+    "movies": [movie_list_item_example],
     "prev_page": "/theater/movies/?page=1&per_page=1",
     "next_page": "/theater/movies/?page=3&per_page=1",
     "total_pages": 9933,
-    "total_items": 9933
+    "total_items": 9933,
 }
 
 movie_create_schema_example = {
@@ -49,7 +33,7 @@ movie_create_schema_example = {
     "price": 49.99,
     "genres": ["Action", "Adventure"],
     "stars": ["John Doe", "Jane Doe"],
-    "directors": ["John Doe", "Jane Doe"]
+    "directors": ["John Doe", "Jane Doe"],
 }
 
 movie_detail_schema_example = {
@@ -60,15 +44,9 @@ movie_detail_schema_example = {
     "votes": 124532,
     "description": "Some Description",
     "price": 49.99,
-    "genres": [
-        genre_schema_example
-    ],
-    "stars": [
-        star_schema_example
-    ],
-    "directors": [
-        director_schema_example
-    ],
+    "genres": [genre_schema_example],
+    "stars": [star_schema_example],
+    "directors": [director_schema_example],
     "certification": certification_schema_example,
     "comments": [
         {
@@ -78,7 +56,7 @@ movie_detail_schema_example = {
             "parent_id": None,
             "created_at": "2025-01-15T10:30:00",
         }
-    ]
+    ],
 }
 
 movie_comment_schema_example = {
@@ -86,17 +64,13 @@ movie_comment_schema_example = {
     "text": "Great movie!",
     "user_id": 3,
     "parent_id": None,
-    "created_at": "2024-05-01T14:32:10"
+    "created_at": "2024-05-01T14:32:10",
 }
 
-genre_with_count_schema_example = {
-    "id": 1,
-    "name": "Action",
-    "movie_count": 15
-}
+genre_with_count_schema_example = {"id": 1, "name": "Action", "movie_count": 15}
 
 star_with_count_schema_example = {
     "id": 2,
     "name": "Leonardo DiCaprio",
-    "movie_count": 7
+    "movie_count": 7,
 }

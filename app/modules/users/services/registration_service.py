@@ -30,7 +30,7 @@ class RegistrationService:
         user_service: UserService,
         email_sender: EmailSenderInterface | None = None,
         base_url: str = "http://localhost:8000",
-    ):
+    ) -> None:
         self._db = db
         self._jwt_manager = jwt_manager
         self._login_time_days = login_time_days
@@ -59,14 +59,16 @@ class RegistrationService:
         Raises:
             HTTPException: If user already exists or default group is missing.
         """
-        stmt = select(User).where(User.email == email)
-        result = await self._db.execute(stmt)
+        user_stmt = select(User).where(User.email == email)
+        result = await self._db.execute(user_stmt)
         existing_user = result.scalars().first()
         if existing_user:
             raise HTTPException(status_code=409, detail="User already exists")
 
-        stmt = select(UserGroupModel).where(UserGroupModel.name == UserGroupEnum.USER)
-        result = await self._db.execute(stmt)
+        group_stmt = select(UserGroupModel).where(
+            UserGroupModel.name == UserGroupEnum.USER
+        )
+        result = await self._db.execute(group_stmt)
         user_group = result.scalars().first()
         if not user_group:
             raise HTTPException(status_code=500, detail="Default user group not found")
@@ -198,7 +200,6 @@ class RegistrationService:
             )
             self._db.add(new_token)
             await self._db.commit()
-
 
         activation_link = f"{self._base_url}/auth/activate?email={email}&token={token}"
 

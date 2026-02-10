@@ -1,75 +1,21 @@
+version: "3.9"
+
 services:
   postgres:
     image: postgres:16
+    env_file:
+      - .env
     container_name: postgres
     restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      PGDATA: /var/lib/postgresql/data/pgdata
-    ports:
-      - "5432:5432"
+      - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data/pgdata
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-fastapi_db}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
-    networks:
-      - app-network
-
-  web:
-    build: .
-    container_name: web
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    volumes:
-      - .:/app
-    ports:
-      - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_HOST: postgres
-      POSTGRES_DB_PORT: 5432
-      POSTGRES_DB: ${POSTGRES_DB:-fastapi_db}
-      SECRET_KEY_ACCESS: ${SECRET_KEY_ACCESS}
-      SECRET_KEY_REFRESH: ${SECRET_KEY_REFRESH}
-      JWT_SIGNING_ALGORITHM: ${JWT_SIGNING_ALGORITHM:-HS256}
-      ENVIRONMENT: ${ENVIRONMENT:-developing}
-      EMAIL_HOST: ${EMAIL_HOST}
-      EMAIL_PORT: ${EMAIL_PORT}
-      EMAIL_HOST_USER: ${EMAIL_HOST_USER}
-      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
-      EMAIL_USE_TLS: ${EMAIL_USE_TLS}
-    networks:
-      - app-network
-
-  celery_worker:
-    build: .
-    command: celery -A app.tasks.celery_app.celery_app worker -l info
-    user: "1000:1000"
-    depends_on:
-      - redis
-      - postgres
-    networks:
-      - app-network
-
-  celery_beat:
-    build: .
-    command: >
-      celery -A app.tasks.celery_app.celery_app
-      beat
-      -l info
-      --schedule=/tmp/celerybeat-schedule
-    user: "1000:1000"
-    depends_on:
-      - redis
-      - postgres
     networks:
       - app-network
 
@@ -78,9 +24,44 @@ services:
     networks:
       - app-network
 
+  web:
+    build: .
+    env_file:
+      - .env
+    container_name: web
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  celery_worker:
+    build: .
+    command: celery -A app.tasks.celery_app.celery_app worker -l info
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - app-network
+
+  celery_beat:
+    build: .
+    command: celery -A app.tasks.celery_app.celery_app beat -l info
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - app-network
+
   mailhog:
     image: mailhog/mailhog
-    container_name: mailhog
     ports:
       - "8025:8025"
       - "1025:1025"
