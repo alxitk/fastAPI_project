@@ -133,7 +133,7 @@ class Movie(Base):
     )
     cart_items : Mapped[List["CartItem"]] = relationship(
         "CartItem",
-        back_populates="cart",
+        back_populates="movie",
     )
 
 
