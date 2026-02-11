@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends
 
 from app.config.dependencies import get_current_moderator_user, get_movie_service
-from app.modules.movies.models.movie_models import Genre, Star, Certification
 from app.modules.movies.schemas.movie_schema import (
     MovieCreateSchema,
     MovieDetailSchema,
     MovieUpdateSchema,
     CertificationSchema,
     CertificationCreateSchema,
+    GenreSchema,
+    StarSchema,
 )
 from app.modules.movies.services.movie_service import MovieService
 
@@ -37,8 +38,9 @@ moderator_router = APIRouter(prefix="/moderator", tags=["Moderator"])
 async def create_genre(
     name: str,
     service: MovieService = Depends(get_movie_service),
-) -> Genre:
-    return await service.create_genre(name)
+) -> GenreSchema:
+    genre_db = await service.create_genre(name)
+    return GenreSchema.model_validate(genre_db)
 
 
 @moderator_router.put(
@@ -71,8 +73,9 @@ async def update_genre(
     genre_id: int,
     name: str,
     service: MovieService = Depends(get_movie_service),
-) -> Genre:
-    return await service.update_genre(genre_id, name)
+) -> GenreSchema:
+    genre_db = await service.update_genre(genre_id, name)
+    return GenreSchema.model_validate(genre_db)
 
 
 @moderator_router.delete(
@@ -128,7 +131,7 @@ async def create_movie(
     service: MovieService = Depends(get_movie_service),
 ) -> MovieDetailSchema:
     movie = await service.create_movie(movie_data)
-    return movie
+    return MovieDetailSchema.model_validate(movie)
 
 
 @moderator_router.put(
@@ -194,8 +197,9 @@ async def update_movie(
 async def create_star(
     name: str,
     service: MovieService = Depends(get_movie_service),
-) -> Star:
-    return await service.create_star(name)
+) -> StarSchema:
+    star_db = await service.create_star(name)
+    return StarSchema.model_validate(star_db)
 
 
 @moderator_router.put(
@@ -226,8 +230,9 @@ async def update_star(
     star_id: int,
     name: str,
     service: MovieService = Depends(get_movie_service),
-) -> Star:
-    return await service.update_star(star_id, name)
+) -> StarSchema:
+    star_db = await service.update_star(star_id, name)
+    return StarSchema.model_validate(star_db)
 
 
 @moderator_router.delete(
@@ -279,6 +284,6 @@ async def delete_star(
 async def create_certification(
     certification_name: CertificationCreateSchema,
     service: MovieService = Depends(get_movie_service),
-) -> Certification:
-    certification = await service.create_certification(certification_name)
-    return certification
+) -> CertificationSchema:
+    certification_db = await service.create_certification(certification_name)
+    return CertificationSchema.model_validate(certification_db)
