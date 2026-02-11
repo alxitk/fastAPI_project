@@ -16,7 +16,7 @@ from app.modules.movies.schemas.examples.movies_schema_examples import (
     movie_detail_schema_example,
     movie_comment_schema_example,
     genre_with_count_schema_example,
-    star_with_count_schema_example,
+    star_with_count_schema_example, movie_favorites_schema_example,
 )
 
 
@@ -162,6 +162,20 @@ class MovieUpdateSchema(BaseModel):
     genres: Optional[list[str]] = None
     stars: Optional[list[str]] = None
     directors: Optional[list[str]] = None
+
+
+class MovieFavoritesSchema(BaseModel):
+    id: int
+    user_id: int
+    movie_id: int
+    created_at: datetime
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "example": movie_favorites_schema_example
+        }
+    }
 
 
 class GenreWithCountSchema(BaseModel):

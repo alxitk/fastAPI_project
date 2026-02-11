@@ -74,3 +74,10 @@ star_with_count_schema_example = {
     "name": "Leonardo DiCaprio",
     "movie_count": 7,
 }
+
+movie_favorites_schema_example = {
+    "id": 1,
+    "user_id": 5,
+    "movie_id": 12,
+    "created_at": "2026-02-11T14:30:00Z",
+}
