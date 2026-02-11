@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, List
 
 from sqlalchemy import (
     Integer,
@@ -15,6 +15,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
+from app.modules.cart.models.cart_models import CartItem
 from app.modules.movies.models.associations import (
     movie_genres,
     movie_stars,
@@ -129,6 +130,10 @@ class Movie(Base):
         secondary=movie_directors,
         back_populates="movies",
         lazy="selectin",
+    )
+    cart_items : Mapped[List["CartItem"]] = relationship(
+        "CartItem",
+        back_populates="cart",
     )
 
 

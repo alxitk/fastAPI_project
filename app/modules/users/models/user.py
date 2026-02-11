@@ -1,17 +1,19 @@
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from sqlalchemy import Enum as SAEnum
 
 from sqlalchemy import Integer, String, Boolean, DateTime, func, ForeignKey, Date, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
+from app.modules.cart.models.cart_models import Cart
 from app.modules.users.models.enums import UserGroupEnum, GenderEnum
-from app.modules.users.models.token import (
-    ActivationTokenModel,
-    PasswordResetTokenModel,
-    RefreshTokenModel,
-)
+if TYPE_CHECKING:
+    from app.modules.users.models.token import (
+        ActivationTokenModel,
+        PasswordResetTokenModel,
+        RefreshTokenModel,
+    )
 
 
 class UserGroupModel(Base):
@@ -90,6 +92,12 @@ class User(Base):
         "MovieComment",
         back_populates="user",
         cascade="all, delete-orphan",
+    )
+
+    cart: Mapped[Optional["Cart"]] = relationship(
+        "Cart",
+        back_populates="user",
+        uselist=False,
     )
 
     @property
