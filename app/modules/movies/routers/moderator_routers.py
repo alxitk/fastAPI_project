@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
-from app.config.dependencies import get_current_moderator_user, get_movie_service
+from app.config.dependencies import get_current_moderator_user, get_movie_service, get_cart_service
+from app.modules.cart.schemas.cart_schema import UserCartSchema
+from app.modules.cart.services.cart_service import CartService
 from app.modules.movies.schemas.movie_schema import (
     MovieCreateSchema,
     MovieDetailSchema,
@@ -287,3 +289,51 @@ async def create_certification(
 ) -> CertificationSchema:
     certification_db = await service.create_certification(certification_name)
     return CertificationSchema.model_validate(certification_db)
+
+
+@moderator_router.get(
+    "/carts",
+    dependencies=[Depends(get_current_moderator_user)],
+    response_model=list[UserCartSchema],
+    summary="View all users' carts",
+    description=(
+        "<h3>This endpoint allows moderators to view all users' carts for analysis or troubleshooting.</h3>"
+    ),
+    responses={
+        200: {"description": "List of all carts retrieved successfully."},
+    },
+    status_code=200,
+)
+async def get_all_carts(
+    service: CartService = Depends(get_cart_service),
+) -> list[UserCartSchema]:
+    return await service.get_all_carts()
+
+
+@moderator_router.get(
+    "/carts/movie/{movie_id}",
+    dependencies=[Depends(get_current_moderator_user)],
+    response_model=list[UserCartSchema],
+    summary="Check which carts contain a specific movie",
+    description=(
+        "<h3>Notify moderators when attempting to delete a movie that exists in users' carts.</h3>"
+    ),
+    responses={
+        200: {"description": "List of carts containing the movie."},
+        404: {
+            "description": "Movie not found in any cart.",
+            "content": {
+                "application/json": {"example": {"detail": "Movie not found in any cart."}}
+            },
+        },
+    },
+    status_code=200,
+)
+async def check_movie_in_carts(
+    movie_id: int,
+    service: CartService = Depends(get_cart_service),
+) -> list[UserCartSchema]:
+    carts = await service.check_movie_in_carts(movie_id)
+    if not carts:
+        raise HTTPException(status_code=404, detail="Movie not found in any cart.")
+    return carts
