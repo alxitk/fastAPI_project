@@ -16,6 +16,7 @@ from app.modules.users.services.registration_service import RegistrationService
 from app.modules.users.services.user_service import UserService
 from app.utils.interfaces import JWTAuthManagerInterface
 from app.utils.token_manager import JWTAuthManager
+from app.modules.cart.services.cart_service import CartService
 
 security = HTTPBearer()
 
@@ -179,3 +180,7 @@ def get_movie_service(
     Provide a MovieService instance with an injected database session.
     """
     return MovieService(db)
+
+
+def get_cart_service(db: AsyncSession = Depends(get_db)) -> CartService:
+    return CartService(db)
