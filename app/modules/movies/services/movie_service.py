@@ -185,7 +185,13 @@ class MovieService:
         )
 
         await self._db.commit()
-        await self._db.refresh(movie)
+
+        result = await self._db.execute(
+            select(Movie)
+            .options(selectinload(Movie.comments))
+            .where(Movie.id == movie.id)
+        )
+        movie = result.scalar_one()
 
         return MovieDetailSchema.from_orm(movie)
 
