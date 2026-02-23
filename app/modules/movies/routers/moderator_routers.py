@@ -1,13 +1,16 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
-from app.config.dependencies import get_current_moderator_user, get_movie_service
-from app.modules.movies.models.movie_models import Genre, Star, Certification
+from app.config.dependencies import get_current_moderator_user, get_movie_service, get_cart_service
+from app.modules.cart.schemas.cart_schema import UserCartSchema
+from app.modules.cart.services.cart_service import CartService
 from app.modules.movies.schemas.movie_schema import (
     MovieCreateSchema,
     MovieDetailSchema,
     MovieUpdateSchema,
     CertificationSchema,
     CertificationCreateSchema,
+    GenreSchema,
+    StarSchema,
 )
 from app.modules.movies.services.movie_service import MovieService
 
@@ -37,8 +40,9 @@ moderator_router = APIRouter(prefix="/moderator", tags=["Moderator"])
 async def create_genre(
     name: str,
     service: MovieService = Depends(get_movie_service),
-) -> Genre:
-    return await service.create_genre(name)
+) -> GenreSchema:
+    genre_db = await service.create_genre(name)
+    return GenreSchema.model_validate(genre_db)
 
 
 @moderator_router.put(
@@ -71,8 +75,9 @@ async def update_genre(
     genre_id: int,
     name: str,
     service: MovieService = Depends(get_movie_service),
-) -> Genre:
-    return await service.update_genre(genre_id, name)
+) -> GenreSchema:
+    genre_db = await service.update_genre(genre_id, name)
+    return GenreSchema.model_validate(genre_db)
 
 
 @moderator_router.delete(
@@ -128,7 +133,7 @@ async def create_movie(
     service: MovieService = Depends(get_movie_service),
 ) -> MovieDetailSchema:
     movie = await service.create_movie(movie_data)
-    return movie
+    return MovieDetailSchema.model_validate(movie)
 
 
 @moderator_router.put(
@@ -194,8 +199,9 @@ async def update_movie(
 async def create_star(
     name: str,
     service: MovieService = Depends(get_movie_service),
-) -> Star:
-    return await service.create_star(name)
+) -> StarSchema:
+    star_db = await service.create_star(name)
+    return StarSchema.model_validate(star_db)
 
 
 @moderator_router.put(
@@ -226,8 +232,9 @@ async def update_star(
     star_id: int,
     name: str,
     service: MovieService = Depends(get_movie_service),
-) -> Star:
-    return await service.update_star(star_id, name)
+) -> StarSchema:
+    star_db = await service.update_star(star_id, name)
+    return StarSchema.model_validate(star_db)
 
 
 @moderator_router.delete(
@@ -279,6 +286,54 @@ async def delete_star(
 async def create_certification(
     certification_name: CertificationCreateSchema,
     service: MovieService = Depends(get_movie_service),
-) -> Certification:
-    certification = await service.create_certification(certification_name)
-    return certification
+) -> CertificationSchema:
+    certification_db = await service.create_certification(certification_name)
+    return CertificationSchema.model_validate(certification_db)
+
+
+@moderator_router.get(
+    "/carts",
+    dependencies=[Depends(get_current_moderator_user)],
+    response_model=list[UserCartSchema],
+    summary="View all users' carts",
+    description=(
+        "<h3>This endpoint allows moderators to view all users' carts for analysis or troubleshooting.</h3>"
+    ),
+    responses={
+        200: {"description": "List of all carts retrieved successfully."},
+    },
+    status_code=200,
+)
+async def get_all_carts(
+    service: CartService = Depends(get_cart_service),
+) -> list[UserCartSchema]:
+    return await service.get_all_carts()
+
+
+@moderator_router.get(
+    "/carts/movie/{movie_id}",
+    dependencies=[Depends(get_current_moderator_user)],
+    response_model=list[UserCartSchema],
+    summary="Check which carts contain a specific movie",
+    description=(
+        "<h3>Notify moderators when attempting to delete a movie that exists in users' carts.</h3>"
+    ),
+    responses={
+        200: {"description": "List of carts containing the movie."},
+        404: {
+            "description": "Movie not found in any cart.",
+            "content": {
+                "application/json": {"example": {"detail": "Movie not found in any cart."}}
+            },
+        },
+    },
+    status_code=200,
+)
+async def check_movie_in_carts(
+    movie_id: int,
+    service: CartService = Depends(get_cart_service),
+) -> list[UserCartSchema]:
+    carts = await service.check_movie_in_carts(movie_id)
+    if not carts:
+        raise HTTPException(status_code=404, detail="Movie not found in any cart.")
+    return carts

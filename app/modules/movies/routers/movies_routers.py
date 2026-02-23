@@ -3,17 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.dependencies import get_current_user
 from app.database.session import get_db
-from app.modules.movies.models.movie_models import (
-    Movie,
-    MovieFavorites,
-    MovieComment,
-)
 from app.modules.movies.schemas.movie_schema import (
     MovieListResponseSchema,
     MovieDetailSchema,
     GenreWithCountSchema,
     StarWithCountSchema,
     MovieListItemSchema,
+    MovieCommentSchema,
+    MovieFavoritesSchema,
 )
 from app.modules.movies.services.movie_service import MovieService
 from app.modules.users.models.user import User
@@ -97,10 +94,10 @@ async def get_movie_list(
         }
     },
 )
-async def get_movie(movie_id: int, db: AsyncSession = Depends(get_db)) -> Movie:
+async def get_movie(movie_id: int, db: AsyncSession = Depends(get_db)) -> MovieDetailSchema:
     service = MovieService(db)
     movie = await service.get_movie_by_id(movie_id)
-    return movie
+    return MovieDetailSchema.model_validate(movie)
 
 
 @movies_router.post(
@@ -152,10 +149,10 @@ async def add_favorite(
     movie_id: int,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> MovieFavorites:
+) -> MovieFavoritesSchema:
     service = MovieService(db)
     favorite = await service.add_to_favorites(current_user.id, movie_id)
-    return favorite
+    return MovieFavoritesSchema.model_validate(favorite)
 
 
 @movies_router.delete(
@@ -179,10 +176,10 @@ async def remove_favorite(
     movie_id: int,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> MovieFavorites | None:
+) -> MovieFavoritesSchema | None:
     service = MovieService(db)
     favorite = await service.remove_from_favorites(current_user.id, movie_id)
-    return favorite
+    return MovieFavoritesSchema.model_validate(favorite) if favorite else None
 
 
 @movies_router.get(
@@ -209,7 +206,7 @@ async def list_favorites(
     sort_by: str | None = Query(None, pattern="^(price|year|imdb)$"),
     order: str = Query("asc", pattern="^(asc|desc)$"),
     search: str | None = Query(None),
-) -> list[Movie]:
+) -> list[MovieDetailSchema]:
     service = MovieService(db)
     favorites = await service.get_favorites(
         user_id=current_user.id,
@@ -222,7 +219,7 @@ async def list_favorites(
         order=order,
         search=search,
     )
-    return favorites
+    return [MovieDetailSchema.model_validate(movie) for movie in favorites]
 
 
 @movies_router.post(
@@ -248,14 +245,15 @@ async def add_comment(
     parent_id: int | None = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> MovieComment:
+) -> MovieCommentSchema:
     service = MovieService(db)
-    return await service.add_comment(
+    comment = await service.add_comment(
         user_id=current_user.id,
         movie_id=movie_id,
         text=text,
         parent_id=parent_id,
     )
+    return MovieCommentSchema.model_validate(comment)
 
 
 @movies_router.get(
@@ -293,10 +291,11 @@ async def movies_by_genre(
     page: int = Query(1, ge=1),
     per_page: int = Query(10, ge=1, le=20),
     db: AsyncSession = Depends(get_db),
-) -> list[Movie]:
+) -> list[MovieDetailSchema]:
     service = MovieService(db)
     offset = (page - 1) * per_page
-    return await service.get_movies_by_genre(genre_id, offset, per_page)
+    movies = await service.get_movies_by_genre(genre_id, offset, per_page)
+    return [MovieDetailSchema.model_validate(movie) for movie in movies]
 
 
 @movies_router.get(
@@ -334,7 +333,8 @@ async def movies_by_star(
     page: int = Query(1, ge=1),
     per_page: int = Query(10, ge=1, le=20),
     db: AsyncSession = Depends(get_db),
-) -> list[Movie]:
+) -> list[MovieDetailSchema]:
     service = MovieService(db)
     offset = (page - 1) * per_page
-    return await service.get_movies_by_star(star_id, offset, per_page)
+    movies = await service.get_movies_by_star(star_id, offset, per_page)
+    return [MovieDetailSchema.model_validate(movie) for movie in movies]
