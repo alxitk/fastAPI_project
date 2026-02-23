@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
 from app.modules.cart.models.cart_models import Cart, CartItem
@@ -66,7 +67,12 @@ class CartService:
 
         cart_item = CartItem(cart_id=cart.id, movie_id=movie_id)
         self._db.add(cart_item)
-        await self._db.commit()
+        try:
+            await self._db.commit()
+        except IntegrityError:
+            await self._db.rollback()
+            raise HTTPException(status_code=400, detail="Movie already in cart")
+
         await self._db.refresh(cart_item)
 
         await self._db.refresh(cart_item, ["movie"])
@@ -93,13 +99,9 @@ class CartService:
         """Clear all items from user's cart."""
         cart = await self.get_or_create_cart(user_id)
 
-        stmt = select(CartItem).where(CartItem.cart_id == cart.id)
-        result = await self._db.execute(stmt)
-        items = result.scalars().all()
-
-        for item in items:
-            await self._db.delete(item)
-
+        await self._db.execute(
+            CartItem.__table__.delete().where(CartItem.cart_id == cart.id)
+        )
         await self._db.commit()
 
     async def get_cart_with_items(self, user_id: int) -> Cart:

@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 
 
 class CartMovieSchema(BaseModel):
@@ -8,7 +8,7 @@ class CartMovieSchema(BaseModel):
     name: str
     year: int
     price: Decimal
-    genres: list[str] = []
+    genres: list[str] = Field(default_factory=list)
 
     @field_validator("genres", mode="before")
     @classmethod
