@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, List
 from sqlalchemy import Enum as SAEnum
 
 from sqlalchemy import Integer, String, Boolean, DateTime, func, ForeignKey, Date, Text
@@ -98,6 +98,11 @@ class User(Base):
         "Cart",
         back_populates="user",
         uselist=False,
+    )
+    orders: Mapped[List["Order"]] = relationship(
+        "Order",
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
 
     @property
