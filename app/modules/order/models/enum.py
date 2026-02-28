@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class GenderEnum(str, Enum):
+class OrderStatusEnum(str, Enum):
     PENDING = "PENDING"
     PAID = "PAID"
     CANCELLED = "CANCELLED"
