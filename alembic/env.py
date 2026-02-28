@@ -21,6 +21,7 @@ from app.modules.movies.models.movie_models import Star
 from app.modules.movies.models.movie_models import Director
 from app.modules.movies.models.movie_models import Certification
 
+from app.modules.order.models.order_models import Order
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
