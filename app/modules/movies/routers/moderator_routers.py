@@ -1,6 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated
 
-from app.config.dependencies import get_current_moderator_user, get_movie_service, get_cart_service
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.config.dependencies import (
+    get_current_moderator_user,
+    get_movie_service,
+    get_cart_service,
+)
+from app.database.session import get_db
 from app.modules.cart.schemas.cart_schema import UserCartSchema
 from app.modules.cart.services.cart_service import CartService
 from app.modules.movies.schemas.movie_schema import (
@@ -13,6 +21,11 @@ from app.modules.movies.schemas.movie_schema import (
     StarSchema,
 )
 from app.modules.movies.services.movie_service import MovieService
+from app.modules.order.routers.order_router import service
+from app.modules.order.schemas.order_schemas import (
+    OrderListResponseSchema,
+    OrderAdminFilter,
+)
 
 moderator_router = APIRouter(prefix="/moderator", tags=["Moderator"])
 
@@ -323,7 +336,9 @@ async def get_all_carts(
         404: {
             "description": "Movie not found in any cart.",
             "content": {
-                "application/json": {"example": {"detail": "Movie not found in any cart."}}
+                "application/json": {
+                    "example": {"detail": "Movie not found in any cart."}
+                }
             },
         },
     },
@@ -337,3 +352,22 @@ async def check_movie_in_carts(
     if not carts:
         raise HTTPException(status_code=404, detail="Movie not found in any cart.")
     return carts
+
+
+@moderator_router.get(
+    "/orders",
+    response_model=OrderListResponseSchema,
+    summary="List all orders with filters",
+)
+async def admin_list_orders(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    _admin=Depends(get_current_moderator_user),
+    filters: OrderAdminFilter = Depends(),
+):
+    orders, total = await service.get_all_orders(session, filters=filters)
+    return OrderListResponseSchema(
+        items=orders,
+        total=total,
+        page=filters.page,
+        page_size=filters.page_size,
+    )
