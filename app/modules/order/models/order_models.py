@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import List
 
-from sqlalchemy import Integer, ForeignKey, Numeric, DateTime, func
+from sqlalchemy import Integer, ForeignKey, Numeric, DateTime, func, CheckConstraint, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Enum as SAEnum
 
@@ -33,6 +33,7 @@ class Order(Base):
     status: Mapped[OrderStatusEnum] = mapped_column(
         SAEnum(OrderStatusEnum, name="order_status_enum", native_enum=False),
         nullable=False,
+        default=OrderStatusEnum.PENDING,
     )
     total_amount: Mapped[Decimal] = mapped_column(
         Numeric(10, 2),
@@ -43,6 +44,13 @@ class Order(Base):
         "OrderItem",
         back_populates="order",
         cascade="all, delete-orphan",
+    )
+
+    __table_args__ = (
+        Index("ix_orders_user_id", "user_id"),
+        Index("ix_orders_status", "status"),
+        Index("ix_orders_created_at", "created_at"),
+        CheckConstraint("total_amount >= 0", name="ck_total_non_negative"),
     )
 
 

@@ -15,16 +15,21 @@ from app.modules.order.schemas.order_schemas import OrderAdminFilter
 class OrderService:
     """Service layer for order business logic."""
 
-    @staticmethod
     async def _get_order_or_404(
-        session: AsyncSession,
-        order_id: int,
-        options=(),
+            self,
+            session: AsyncSession,
+            order_id: int,
+            user_id: int | None = None,
+            options=(),
     ) -> Order:
         stmt = select(Order).where(Order.id == order_id).options(*options)
         order = (await session.execute(stmt)).scalar_one_or_none()
         if not order:
             raise NotFoundException("Order not found.")
+
+        if user_id is not None and order.user_id != user_id:
+            raise NotFoundException("Order not found.")
+
         return order
 
     async def create_order(
@@ -137,26 +142,28 @@ class OrderService:
         return f"https://payment.example.com/pay?order_id={order.id}"
 
     async def revalidate_total(
-        self,
-        session: AsyncSession,
-        order_id: int,
-        user_id: int,
+            self,
+            session: AsyncSession,
+            order_id: int,
+            user_id: int,
     ) -> Order:
         """Recalculate total_amount from current movie prices before charging."""
+
         order = await self._get_order_or_404(
             session,
             order_id,
+            user_id=user_id,
             options=(selectinload(Order.order_items).selectinload(OrderItem.movie),),
         )
-        if order.user_id != user_id:
-            raise NotFoundException("Order not found.")
+
         if order.status != OrderStatusEnum.PENDING:
             raise BadRequestException("Only pending orders can be revalidated.")
 
         order.total_amount = sum(
-            (item.movie.price for item in order.order_items),
+            (item.movie.price for item in order.order_items if item.movie is not None),
             Decimal("0.00"),
         )
+
         await session.commit()
         await session.refresh(order)
         return order
@@ -167,7 +174,7 @@ class OrderService:
         order_id: int,
         user_id: int,
     ) -> Order:
-        order = await self._get_order_or_404(session, order_id)
+        order = await self._get_order_or_404(session, order_id, user_id=user_id)
 
         if order.user_id != user_id:
             raise NotFoundException("Order not found.")
