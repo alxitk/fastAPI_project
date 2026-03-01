@@ -46,3 +46,27 @@ class BaseEmailError(Exception):
     """Base class for all exceptions raised by email notification module."""
 
     pass
+
+
+# Order
+class BaseOrderError(Exception):
+    """Base class for all order-related errors."""
+
+    def __init__(self, message: str | None = None) -> None:
+        if message is None:
+            message = "An order error occurred."
+        super().__init__(message)
+
+
+class NotFoundException(BaseOrderError):
+    """Raised when an order is not found."""
+
+    def __init__(self, message: str = "Not found.") -> None:
+        super().__init__(message)
+
+
+class BadRequestException(BaseOrderError):
+    """Raised when a request is invalid."""
+
+    def __init__(self, message: str = "Bad request.") -> None:
+        super().__init__(message)
