@@ -7,7 +7,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Enum as SAEnum
 
 from app.database.base import Base
-from app.modules.movies.models.movie_models import Movie
 from app.modules.order.models.enum import OrderStatusEnum
 
 
