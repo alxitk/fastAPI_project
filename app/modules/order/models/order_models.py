@@ -5,6 +5,10 @@ from typing import List
 from sqlalchemy import Integer, ForeignKey, Numeric, DateTime, func, CheckConstraint, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Enum as SAEnum
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.modules.payment.models.payment_models import PaymentItem, Payment
 
 from app.database.base import Base
 from app.modules.order.models.enum import OrderStatusEnum
@@ -45,6 +49,11 @@ class Order(Base):
         back_populates="order",
         cascade="all, delete-orphan",
     )
+    payments: Mapped[List["Payment"]] = relationship(
+        "Payment",
+        back_populates="order",
+        cascade="all",
+    )
 
     __table_args__ = (
         Index("ix_orders_user_id", "user_id"),
@@ -82,4 +91,9 @@ class OrderItem(Base):
     price_at_order: Mapped[Decimal] = mapped_column(
         Numeric(10, 2),
         nullable=False
+    )
+    payment_items: Mapped[List["PaymentItem"]] = relationship(
+        "PaymentItem",
+        back_populates="order_item",
+        cascade="all, delete-orphan",
     )

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
 from app.modules.cart.models.cart_models import Cart
+from app.modules.payment.models.payment_models import Payment
 from app.modules.users.models.enums import UserGroupEnum, GenderEnum
 if TYPE_CHECKING:
     from app.modules.users.models.token import (
@@ -103,6 +104,11 @@ class User(Base):
         "Order",
         back_populates="user",
         cascade="all, delete-orphan",
+    )
+    payments: Mapped[List[Payment]] = relationship(
+        "Payment",
+        back_populates="user",
+        cascade="all",
     )
 
     @property
