@@ -40,6 +40,8 @@ class Settings(BaseAppSettings):
         os.getenv("SECRET_KEY_REFRESH") or binascii.hexlify(os.urandom(32)).decode()
     )
     JWT_SIGNING_ALGORITHM: str = os.getenv("JWT_SIGNING_ALGORITHM", "HS256")
+    STRIPE_SECRET_KEY: str = os.getenv("STRIPE_SECRET_KEY", "")
+    STRIPE_WEBHOOK_SECRET: str = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 
 
 class TestingSettings(BaseAppSettings):

@@ -8,6 +8,8 @@ from app.modules.cart.routers.cart_routers import cart_router
 from app.modules.movies.routers.moderator_routers import moderator_router
 from app.modules.movies.routers.movies_routers import movies_router
 from app.modules.order.routers.order_router import order_router
+from app.modules.payment.routers.payment_admin_router import admin_payment_router
+from app.modules.payment.routers.payment_router import payment_router
 
 from app.modules.users.routers.auth_router import auth_router
 from app.modules.users.routers.password_router import password_router
@@ -40,3 +42,5 @@ app.include_router(movies_router)
 app.include_router(moderator_router)
 app.include_router(cart_router)
 app.include_router(order_router)
+app.include_router(payment_router)
+app.include_router(admin_payment_router)
