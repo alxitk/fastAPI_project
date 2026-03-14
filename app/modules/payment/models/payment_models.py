@@ -20,9 +20,7 @@ if TYPE_CHECKING:
 class PaymentItem(Base):
     __tablename__ = "payment_items"
 
-    id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     payment: Mapped["Payment"] = relationship(
         "Payment",
@@ -30,8 +28,11 @@ class PaymentItem(Base):
     )
     payment_id: Mapped[int] = mapped_column(
         ForeignKey(
-            "payments.id", ondelete="CASCADE", onupdate="RESTRICT",
-        ), nullable=False,
+            "payments.id",
+            ondelete="CASCADE",
+            onupdate="RESTRICT",
+        ),
+        nullable=False,
     )
     order_item: Mapped["OrderItem"] = relationship(
         "OrderItem",
@@ -39,8 +40,11 @@ class PaymentItem(Base):
     )
     order_item_id: Mapped[int] = mapped_column(
         ForeignKey(
-            "order_items.id", ondelete="CASCADE", onupdate="CASCADE",
-        ), nullable=False,
+            "order_items.id",
+            ondelete="CASCADE",
+            onupdate="CASCADE",
+        ),
+        nullable=False,
     )
     price_at_payment: Mapped[Decimal] = mapped_column(
         Numeric(10, 2),
@@ -51,27 +55,22 @@ class PaymentItem(Base):
 class Payment(Base):
     __tablename__ = "payments"
 
-    id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     user: Mapped["User"] = relationship(
         "User",
         back_populates="payments",
     )
     user_id: Mapped[int] = mapped_column(
-        ForeignKey(
-            "users.id", ondelete="RESTRICT", onupdate="CASCADE"
-        ), nullable=False
+        ForeignKey("users.id", ondelete="RESTRICT", onupdate="CASCADE"), nullable=False
     )
     order: Mapped["Order"] = relationship(
         "Order",
         back_populates="payments",
     )
     order_id: Mapped[int] = mapped_column(
-        ForeignKey(
-            "orders.id", ondelete="RESTRICT", onupdate="CASCADE"
-        ), nullable=False,
+        ForeignKey("orders.id", ondelete="RESTRICT", onupdate="CASCADE"),
+        nullable=False,
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -104,4 +103,3 @@ class Payment(Base):
         Index("ix_payments_status", "status"),
         Index("ix_payments_created_at", "created_at"),
     )
-

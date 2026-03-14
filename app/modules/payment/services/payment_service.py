@@ -35,9 +35,7 @@ class PaymentService:
     ) -> Payment:
         # Lock order row to prevent race condition
         result = await db.execute(
-            select(Order)
-            .where(Order.id == order_id)
-            .with_for_update()
+            select(Order).where(Order.id == order_id).with_for_update()
         )
         order = result.scalar_one_or_none()
 
@@ -49,9 +47,7 @@ class PaymentService:
 
         # Check order status allows payment
         if order.status not in PAYABLE_ORDER_STATUSES:
-            raise ValueError(
-                f"Order cannot be paid in status '{order.status.value}'"
-            )
+            raise ValueError(f"Order cannot be paid in status '{order.status.value}'")
 
         # Check for existing pending payment (with lock to prevent race condition)
         existing_result = await db.execute(
