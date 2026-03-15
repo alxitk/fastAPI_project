@@ -311,9 +311,7 @@ MOVIES = [
 
 async def _get_or_create(session, model, **kwargs):
     """Return existing row or create and flush a new one."""
-    result = await session.execute(
-        select(model).filter_by(**kwargs)
-    )
+    result = await session.execute(select(model).filter_by(**kwargs))
     instance = result.scalar_one_or_none()
     if instance is None:
         instance = model(**kwargs)
@@ -368,7 +366,7 @@ async def seed() -> None:
         for name in CERTIFICATIONS:
             cert, created = await _get_or_create(session, Certification, name=name)
             cert_map[name] = cert
-            print(f"  {'+'  if created else '='} {name}")
+            print(f"  {'+' if created else '='} {name}")
 
         # 4. Genres ───────────────────────────────────────────────────────────
         print("\n── Genres ──")
@@ -376,7 +374,7 @@ async def seed() -> None:
         for name in GENRES:
             genre, created = await _get_or_create(session, Genre, name=name)
             genre_map[name] = genre
-            print(f"  {'+'  if created else '='} {name}")
+            print(f"  {'+' if created else '='} {name}")
 
         # 5. Directors ────────────────────────────────────────────────────────
         print("\n── Directors ──")
@@ -384,7 +382,7 @@ async def seed() -> None:
         for name in DIRECTORS:
             director, created = await _get_or_create(session, Director, name=name)
             director_map[name] = director
-            print(f"  {'+'  if created else '='} {name}")
+            print(f"  {'+' if created else '='} {name}")
 
         # 6. Stars ────────────────────────────────────────────────────────────
         print("\n── Stars ──")
@@ -392,7 +390,7 @@ async def seed() -> None:
         for name in STARS:
             star, created = await _get_or_create(session, Star, name=name)
             star_map[name] = star
-            print(f"  {'+'  if created else '='} {name}")
+            print(f"  {'+' if created else '='} {name}")
 
         # 7. Movies ───────────────────────────────────────────────────────────
         print("\n── Movies ──")
