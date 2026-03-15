@@ -219,23 +219,40 @@ Copy `.env.sample` to `.env` and fill in the values.
 
 ## Creating a Superuser (Admin Account)
 
-Before you can test admin or moderator endpoints you need to:
-1. Seed the `user_groups` table (USER / MODERATOR / ADMIN)
-2. Create an active admin account
+Before you can test admin or moderator endpoints you need to seed the `user_groups` table and create an admin account directly via `psql`.
 
-A ready-made script handles both steps:
+**1. Connect to the database:**
 
 ```bash
-# Default credentials: admin@cinema.local / Admin123!
-python create_superuser.py
+# Via Docker (use actual values from your .env)
+docker exec -it postgres psql -U postgres -d fastapi_db
 
-# Custom credentials
-python create_superuser.py --email you@example.com --password "MyP@ss1"
+# Or locally
+psql -U postgres -d fastapi_db
 ```
 
-The script is **idempotent** — running it again only updates the existing user, it does not create duplicates.
+**2. Seed user groups (run once):**
 
-After the script completes, log in via the API to get a JWT token:
+```sql
+INSERT INTO user_groups (name) VALUES ('USER'), ('MODERATOR'), ('ADMIN')
+ON CONFLICT DO NOTHING;
+```
+
+**3. Create an admin user:**
+
+```sql
+INSERT INTO users (email, password, is_active, group_id)
+VALUES (
+  'admin@cinema.local',
+  '$2b$12$<bcrypt_hash_of_your_password>',
+  true,
+  3
+);
+```
+
+> Generate a bcrypt hash with: `python -c "from passlib.context import CryptContext; print(CryptContext(schemes=['bcrypt']).hash('Admin123!'))"`
+
+**4. Log in via the API:**
 
 ```bash
 curl -X POST http://localhost:8000/auth/login \
