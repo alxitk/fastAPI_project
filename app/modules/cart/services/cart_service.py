@@ -53,7 +53,6 @@ class CartService:
 
         cart = await self.get_or_create_cart(user_id)
 
-
         item_stmt = select(CartItem).where(
             CartItem.cart_id == cart.id, CartItem.movie_id == movie_id
         )
@@ -61,9 +60,7 @@ class CartService:
         existing_item = item_result.scalar_one_or_none()
 
         if existing_item:
-            raise HTTPException(
-                status_code=400, detail="Movie already in cart"
-            )
+            raise HTTPException(status_code=400, detail="Movie already in cart")
 
         cart_item = CartItem(cart_id=cart.id, movie_id=movie_id)
         self._db.add(cart_item)
@@ -110,9 +107,8 @@ class CartService:
 
     async def get_all_carts(self) -> list[Cart]:
         """Get all users' carts with items (moderator only)."""
-        stmt = (
-            select(Cart)
-            .options(selectinload(Cart.items).selectinload(CartItem.movie))
+        stmt = select(Cart).options(
+            selectinload(Cart.items).selectinload(CartItem.movie)
         )
         result = await self._db.execute(stmt)
         return result.scalars().all()

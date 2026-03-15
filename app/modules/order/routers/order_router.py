@@ -33,9 +33,7 @@ service = OrderService()
         201: {"description": "Order created, payment URL returned."},
         400: {
             "description": "Cart is empty or contains unavailable items.",
-            "content": {
-                "application/json": {"example": {"detail": "Cart is empty."}}
-            },
+            "content": {"application/json": {"example": {"detail": "Cart is empty."}}},
         },
         401: {
             "description": "Authentication required.",

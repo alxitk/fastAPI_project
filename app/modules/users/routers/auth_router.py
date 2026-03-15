@@ -95,9 +95,7 @@ async def refresh_token(
         200: {"description": "Logged out successfully."},
         401: {
             "description": "Refresh token is invalid.",
-            "content": {
-                "application/json": {"example": {"detail": "Invalid token."}}
-            },
+            "content": {"application/json": {"example": {"detail": "Invalid token."}}},
         },
     },
 )

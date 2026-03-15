@@ -16,7 +16,8 @@ from app.modules.movies.schemas.examples.movies_schema_examples import (
     movie_detail_schema_example,
     movie_comment_schema_example,
     genre_with_count_schema_example,
-    star_with_count_schema_example, movie_favorites_schema_example,
+    star_with_count_schema_example,
+    movie_favorites_schema_example,
 )
 
 
@@ -172,9 +173,7 @@ class MovieFavoritesSchema(BaseModel):
 
     model_config = {
         "from_attributes": True,
-        "json_schema_extra": {
-            "example": movie_favorites_schema_example
-        }
+        "json_schema_extra": {"example": movie_favorites_schema_example},
     }
 
 

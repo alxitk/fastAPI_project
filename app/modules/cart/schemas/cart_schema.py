@@ -40,6 +40,7 @@ class CartSchema(BaseModel):
 class CartItemAddSchema(BaseModel):
     movie_id: int
 
+
 class UserCartSchema(BaseModel):
     id: int
     user_id: int

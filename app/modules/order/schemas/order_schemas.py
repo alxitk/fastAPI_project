@@ -12,9 +12,7 @@ class OrderItemResponseSchema(BaseModel):
     movie_id: int
     price_at_order: Decimal
 
-    model_config = ConfigDict(
-        from_attributes=True
-    )
+    model_config = ConfigDict(from_attributes=True)
 
 
 class OrderResponseSchema(BaseModel):
@@ -25,13 +23,12 @@ class OrderResponseSchema(BaseModel):
     total_amount: Decimal
     order_items: List[OrderItemResponseSchema]
 
-    model_config = ConfigDict(
-        from_attributes=True
-    )
+    model_config = ConfigDict(from_attributes=True)
 
 
 class OrderListResponseSchema(BaseModel):
     """Paginated list of orders."""
+
     items: List[OrderResponseSchema]
     total: int
     page: int
@@ -42,9 +39,7 @@ class OrderCancelResponseSchema(BaseModel):
     id: int
     status: OrderStatusEnum
 
-    model_config = ConfigDict(
-        from_attributes=True
-    )
+    model_config = ConfigDict(from_attributes=True)
 
 
 class OrderAdminFilter(BaseModel):
@@ -58,5 +53,6 @@ class OrderAdminFilter(BaseModel):
 
 class OrderCreateResponseSchema(BaseModel):
     """Returned after order is placed; contains redirect URL for payment."""
+
     order: OrderResponseSchema
     payment_url: str

@@ -15,6 +15,7 @@ The project provides authentication, a movie catalogue, shopping cart, order man
   - [Run locally with Poetry](#run-locally-with-poetry)
 - [Environment Variables](#environment-variables)
 - [Creating a Superuser (Admin Account)](#creating-a-superuser-admin-account)
+- [Seed Test Data](#seed-test-data)
 - [Database Migrations](#database-migrations)
 - [Background Tasks](#background-tasks)
 - [API Documentation (Swagger)](#api-documentation-swagger)
@@ -241,7 +242,7 @@ ON CONFLICT DO NOTHING;
 **3. Create an admin user:**
 
 ```sql
-INSERT INTO users (email, password, is_active, group_id)
+INSERT INTO users (email, _hashed_password, is_active, group_id)
 VALUES (
   'admin@cinema.local',
   '$2b$12$<bcrypt_hash_of_your_password>',
@@ -262,6 +263,46 @@ curl -X POST http://localhost:8000/auth/login \
 
 Use the returned `access_token` as a Bearer token in Swagger UI
 (`Authorization → Bearer <token>`) or in your HTTP client.
+
+---
+
+## Seed Test Data
+
+`seed_data.py` populates the database with ready-to-use fixtures so every API
+endpoint can be exercised immediately after start-up.
+
+### What gets created
+
+| Entity | Count | Details |
+|--------|-------|---------|
+| User groups | 3 | `USER`, `MODERATOR`, `ADMIN` |
+| Users | 3 | One per role (see credentials below) |
+| Certifications | 5 | G, PG, PG-13, R, NC-17 |
+| Genres | 10 | Action, Animation, Comedy, Crime, Documentary, Drama, Horror, Romance, Sci-Fi, Thriller |
+| Directors | 5 | Nolan, Villeneuve, Tarantino, Ridley Scott, Spielberg |
+| Stars | 10 | DiCaprio, Murphy, Hanks, Streep, Chalamet, Zendaya, … |
+| Movies | 10 | Full details incl. price, IMDb rating, genres, cast |
+
+### Test credentials
+
+| Email | Password | Role |
+|-------|----------|------|
+| `admin@cinema.local` | `Admin123!` | ADMIN |
+| `moderator@cinema.local` | `Moder123!` | MODERATOR |
+| `user@cinema.local` | `User1234!` | USER |
+
+### Running the script
+
+```bash
+# Make sure the services are running first
+docker-compose up -d
+
+# Run the seed script inside the web container
+docker exec -it web python seed_data.py
+```
+
+The script is **idempotent** — running it multiple times will skip rows that
+already exist without raising errors.
 
 ---
 

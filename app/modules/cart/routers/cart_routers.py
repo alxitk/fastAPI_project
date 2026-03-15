@@ -1,7 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.config.dependencies import get_current_user, get_cart_service
-from app.modules.cart.schemas.cart_schema import CartSchema, CartItemSchema, CartItemAddSchema
+from app.modules.cart.schemas.cart_schema import (
+    CartSchema,
+    CartItemSchema,
+    CartItemAddSchema,
+)
 from app.modules.cart.services.cart_service import CartService
 from app.modules.users.models.user import User
 
@@ -53,9 +57,7 @@ async def get_cart(
         },
         404: {
             "description": "Movie not found.",
-            "content": {
-                "application/json": {"example": {"detail": "Movie not found"}}
-            },
+            "content": {"application/json": {"example": {"detail": "Movie not found"}}},
         },
     },
 )

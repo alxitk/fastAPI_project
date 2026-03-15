@@ -95,9 +95,7 @@ async def stripe_webhook(
         400: {
             "description": "Order already paid or invalid state.",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Order is already paid."}
-                }
+                "application/json": {"example": {"detail": "Order is already paid."}}
             },
         },
         401: {

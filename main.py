@@ -162,7 +162,6 @@ async def read_root() -> Dict[str, str]:
     return {"message": "Cinema API is running. Docs available at /docs (authorised staff only)."}
 
 
-
 @app.exception_handler(InvalidCredentialsError)
 async def invalid_credentials_handler(
     request: Request,

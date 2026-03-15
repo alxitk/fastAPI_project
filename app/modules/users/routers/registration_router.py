@@ -131,9 +131,7 @@ async def resend_activation(
         },
         404: {
             "description": "User not found.",
-            "content": {
-                "application/json": {"example": {"detail": "User not found"}}
-            },
+            "content": {"application/json": {"example": {"detail": "User not found"}}},
         },
     },
 )
@@ -170,9 +168,7 @@ async def admin_activate_user(
         },
         404: {
             "description": "User or group not found.",
-            "content": {
-                "application/json": {"example": {"detail": "User not found"}}
-            },
+            "content": {"application/json": {"example": {"detail": "User not found"}}},
         },
     },
 )

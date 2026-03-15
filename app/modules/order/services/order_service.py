@@ -16,11 +16,11 @@ class OrderService:
     """Service layer for order business logic."""
 
     async def _get_order_or_404(
-            self,
-            session: AsyncSession,
-            order_id: int,
-            user_id: int | None = None,
-            options=(),
+        self,
+        session: AsyncSession,
+        order_id: int,
+        user_id: int | None = None,
+        options=(),
     ) -> Order:
         stmt = select(Order).where(Order.id == order_id).options(*options)
         order = (await session.execute(stmt)).scalar_one_or_none()
@@ -142,10 +142,10 @@ class OrderService:
         return f"https://payment.example.com/pay?order_id={order.id}"
 
     async def revalidate_total(
-            self,
-            session: AsyncSession,
-            order_id: int,
-            user_id: int,
+        self,
+        session: AsyncSession,
+        order_id: int,
+        user_id: int,
     ) -> Order:
         """Recalculate total_amount from current movie prices before charging."""
 

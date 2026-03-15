@@ -94,7 +94,9 @@ async def get_movie_list(
         }
     },
 )
-async def get_movie(movie_id: int, db: AsyncSession = Depends(get_db)) -> MovieDetailSchema:
+async def get_movie(
+    movie_id: int, db: AsyncSession = Depends(get_db)
+) -> MovieDetailSchema:
     service = MovieService(db)
     movie = await service.get_movie_by_id(movie_id)
     return MovieDetailSchema.model_validate(movie)

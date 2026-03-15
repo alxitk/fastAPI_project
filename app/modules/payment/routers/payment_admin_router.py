@@ -65,8 +65,12 @@ async def list_payments(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_admin_user),
     user_id: Optional[int] = Query(None, description="Filter by user ID"),
-    status: Optional[PaymentStatusEnum] = Query(None, description="Filter by payment status"),
-    date_from: Optional[datetime] = Query(None, description="Filter from date (ISO 8601)"),
+    status: Optional[PaymentStatusEnum] = Query(
+        None, description="Filter by payment status"
+    ),
+    date_from: Optional[datetime] = Query(
+        None, description="Filter from date (ISO 8601)"
+    ),
     date_to: Optional[datetime] = Query(None, description="Filter to date (ISO 8601)"),
 ):
     payments = await AdminPaymentService.get_all_payments(

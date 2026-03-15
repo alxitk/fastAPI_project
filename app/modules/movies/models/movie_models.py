@@ -131,7 +131,7 @@ class Movie(Base):
         back_populates="movies",
         lazy="selectin",
     )
-    cart_items : Mapped[List["CartItem"]] = relationship(
+    cart_items: Mapped[List["CartItem"]] = relationship(
         "CartItem",
         back_populates="movie",
     )
