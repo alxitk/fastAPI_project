@@ -39,7 +39,7 @@ app = FastAPI(
         "`Authorization: Bearer <token>` header.\n\n"
         "> **Documentation access** is restricted to authorised staff only."
     ),
-    docs_url=None,   # disable default /docs
+    docs_url=None,  # disable default /docs
     redoc_url=None,  # disable default /redoc
     openapi_url=None,  # disable default /openapi.json
     contact={
@@ -159,7 +159,9 @@ async def redoc_ui(
 @app.get("/", tags=["Health"])
 async def read_root() -> Dict[str, str]:
     """Health-check endpoint."""
-    return {"message": "Cinema API is running. Docs available at /docs (authorised staff only)."}
+    return {
+        "message": "Cinema API is running. Docs available at /docs (authorised staff only)."
+    }
 
 
 @app.exception_handler(InvalidCredentialsError)
