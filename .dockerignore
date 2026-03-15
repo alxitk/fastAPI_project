@@ -31,7 +31,6 @@ dockerignore
 # Testing / linting
 .pytest_cache/
 .mypy_cache/
-.flake8
 mypy.ini
 
 # OS
