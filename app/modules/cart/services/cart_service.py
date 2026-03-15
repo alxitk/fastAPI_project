@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
@@ -96,9 +96,7 @@ class CartService:
         """Clear all items from user's cart."""
         cart = await self.get_or_create_cart(user_id)
 
-        await self._db.execute(
-            CartItem.__table__.delete().where(CartItem.cart_id == cart.id)
-        )
+        await self._db.execute(delete(CartItem).where(CartItem.cart_id == cart.id))
         await self._db.commit()
 
     async def get_cart_with_items(self, user_id: int) -> Cart:
@@ -111,7 +109,7 @@ class CartService:
             selectinload(Cart.items).selectinload(CartItem.movie)
         )
         result = await self._db.execute(stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def check_movie_in_carts(self, movie_id: int) -> list[Cart]:
         """Check if movie exists in any user's cart (moderator only)."""
@@ -122,4 +120,4 @@ class CartService:
             .options(selectinload(Cart.items).selectinload(CartItem.movie))
         )
         result = await self._db.execute(stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())

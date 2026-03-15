@@ -350,15 +350,15 @@ async def seed() -> None:
             user = User(
                 email=ud["email"],
                 is_active=ud["is_active"],
-                group_id=group_map[ud["group"]].id,
+                group_id=group_map[ud["group"]].id,  # type: ignore
             )
-            user.set_password(ud["password"])
+            user.set_password(ud["password"])  # type: ignore
             session.add(user)
             await session.flush()
 
-            profile = UserProfileModel(user_id=user.id, **ud["profile"])
+            profile = UserProfileModel(user_id=user.id, **ud["profile"])  # type: ignore
             session.add(profile)
-            print(f"  + {ud['email']}  [{ud['group'].value}]")
+            print(f"  + {ud['email']}  [{ud['group'].value}]")  # type: ignore
 
         # 3. Certifications ───────────────────────────────────────────────────
         print("\n── Certifications ──")
@@ -415,11 +415,11 @@ async def seed() -> None:
                 gross=md.get("gross"),
                 description=md["description"],
                 price=md["price"],
-                certification_id=cert_map[md["certification"]].id,
+                certification_id=cert_map[md["certification"]].id,  # type: ignore
             )
-            movie.genres = [genre_map[g] for g in md["genres"]]
-            movie.directors = [director_map[d] for d in md["directors"]]
-            movie.stars = [star_map[s] for s in md["stars"]]
+            movie.genres = [genre_map[g] for g in md["genres"]]  # type: ignore
+            movie.directors = [director_map[d] for d in md["directors"]]  # type: ignore
+            movie.stars = [star_map[s] for s in md["stars"]]  # type: ignore
             session.add(movie)
             print(f"  + {md['name']} ({md['year']})")
 

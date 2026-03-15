@@ -21,6 +21,9 @@ class BaseAppSettings(BaseSettings):
     POSTGRES_DB_PORT: int = 5432
     POSTGRES_DB: str = "fastapi_db"
 
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = ""
+
     model_config = {
         "case_sensitive": False,
     }

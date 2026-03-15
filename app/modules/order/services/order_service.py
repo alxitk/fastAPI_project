@@ -50,7 +50,9 @@ class OrderService:
             .where(Cart.user_id == user_id)
             .options(selectinload(CartItem.movie))
         )
-        cart_items: List[CartItem] = (await session.execute(cart_stmt)).scalars().all()
+        cart_items: List[CartItem] = list(
+            (await session.execute(cart_stmt)).scalars().all()
+        )
 
         if not cart_items:
             raise BadRequestException("Cart is empty.")

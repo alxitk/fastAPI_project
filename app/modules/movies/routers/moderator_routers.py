@@ -320,7 +320,7 @@ async def create_certification(
 async def get_all_carts(
     service: CartService = Depends(get_cart_service),
 ) -> list[UserCartSchema]:
-    return await service.get_all_carts()
+    return await service.get_all_carts()  # type: ignore
 
 
 @moderator_router.get(
@@ -351,7 +351,7 @@ async def check_movie_in_carts(
     carts = await service.check_movie_in_carts(movie_id)
     if not carts:
         raise HTTPException(status_code=404, detail="Movie not found in any cart.")
-    return carts
+    return carts  # type: ignore
 
 
 @moderator_router.get(
@@ -366,7 +366,7 @@ async def admin_list_orders(
 ):
     orders, total = await service.get_all_orders(session, filters=filters)
     return OrderListResponseSchema(
-        items=orders,
+        items=orders,  # type: ignore
         total=total,
         page=filters.page,
         page_size=filters.page_size,

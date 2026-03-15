@@ -112,7 +112,7 @@ class PaymentService:
             stripe.PaymentIntent.create,
             amount=amount_cents,
             currency="usd",
-            metadata={"payment_id": payment.id, "order_id": payment.order_id},
+            metadata={"payment_id": str(payment.id), "order_id": str(payment.order_id)},
         )
 
         payment.external_payment_id = intent["id"]
@@ -237,7 +237,7 @@ class PaymentService:
             query = query.where(Payment.created_at <= date_to)
 
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
 
 class AdminPaymentService:
@@ -273,4 +273,4 @@ class AdminPaymentService:
             query = query.where(Payment.created_at <= date_to)
 
         result = await db.execute(query)
-        return result.scalars().all()
+        return list(result.scalars().all())

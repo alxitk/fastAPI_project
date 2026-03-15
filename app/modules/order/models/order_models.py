@@ -15,6 +15,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Enum as SAEnum
 from typing import TYPE_CHECKING
 
+from app.modules.movies.models.movie_models import Movie
+from app.modules.users.models.user import User
+
 if TYPE_CHECKING:
     from app.modules.payment.models.payment_models import PaymentItem, Payment
 

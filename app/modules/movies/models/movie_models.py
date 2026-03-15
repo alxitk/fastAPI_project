@@ -21,6 +21,7 @@ from app.modules.movies.models.associations import (
     movie_stars,
     movie_directors,
 )
+from app.modules.order.models.order_models import OrderItem
 
 
 class Genre(Base):

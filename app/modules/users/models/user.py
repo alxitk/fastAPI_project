@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
 from app.modules.cart.models.cart_models import Cart
+from app.modules.order.models.order_models import Order
 from app.modules.payment.models.payment_models import Payment
 from app.modules.users.models.enums import UserGroupEnum, GenderEnum
 

@@ -173,7 +173,7 @@ class MovieFavoritesSchema(BaseModel):
 
     model_config = {
         "from_attributes": True,
-        "json_schema_extra": {"example": movie_favorites_schema_example},
+        "json_schema_extra": {"example": movie_favorites_schema_example},  # type: ignore[dict-item]
     }
 
 

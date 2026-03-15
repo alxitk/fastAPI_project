@@ -48,7 +48,10 @@ async def create_order(
     current_user=Depends(get_current_user),
 ):
     order, payment_url = await service.create_order(session, user_id=current_user.id)
-    return OrderCreateResponseSchema(order=order, payment_url=payment_url)
+    return OrderCreateResponseSchema(
+        order=OrderResponseSchema.model_validate(order),
+        payment_url=payment_url,
+    )
 
 
 @order_router.get(
@@ -83,7 +86,7 @@ async def list_my_orders(
         page_size=page_size,
     )
     return OrderListResponseSchema(
-        items=orders,
+        items=[OrderResponseSchema.model_validate(o) for o in orders],
         total=total,
         page=page,
         page_size=page_size,
