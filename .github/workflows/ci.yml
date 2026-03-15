@@ -3,10 +3,10 @@ name: CI
 on:
   push:
     branches:
-      - feature/ci
+      - develop
   pull_request:
     branches:
-      - feature/ci
+      - develop
 
 jobs:
   lint-test:
