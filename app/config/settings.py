@@ -43,6 +43,9 @@ class Settings(BaseAppSettings):
     STRIPE_SECRET_KEY: str = os.getenv("STRIPE_SECRET_KEY", "")
     STRIPE_WEBHOOK_SECRET: str = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 
+    DOCS_USERNAME: str = os.getenv("DOCS_USERNAME", "admin")
+    DOCS_PASSWORD: str = os.getenv("DOCS_PASSWORD", "changeme")
+
 
 class TestingSettings(BaseAppSettings):
     SECRET_KEY_ACCESS: str = "SECRET_KEY_ACCESS"
