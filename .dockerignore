@@ -1,0 +1,42 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+
+# Secrets
+.env
+*.env
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Docker
+docker-compose.yml
+docker-compose.override.yml
+Dockerfile*
+.dockerignore
+dockerignore
+
+# IDE / editors
+.idea/
+*.iml
+.vscode/
+
+# Testing / linting
+.pytest_cache/
+.mypy_cache/
+.flake8
+mypy.ini
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs
+README.md
