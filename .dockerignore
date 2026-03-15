@@ -30,8 +30,8 @@ dockerignore
 
 # Testing / linting
 .pytest_cache/
-.mypy_cache/
-mypy.ini
+#.mypy_cache/
+#mypy.ini
 
 # OS
 .DS_Store
