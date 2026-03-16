@@ -1,0 +1,373 @@
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.config.dependencies import (
+    get_current_moderator_user,
+    get_movie_service,
+    get_cart_service,
+)
+from app.database.session import get_db
+from app.modules.cart.schemas.cart_schema import UserCartSchema
+from app.modules.cart.services.cart_service import CartService
+from app.modules.movies.schemas.movie_schema import (
+    MovieCreateSchema,
+    MovieDetailSchema,
+    MovieUpdateSchema,
+    CertificationSchema,
+    CertificationCreateSchema,
+    GenreSchema,
+    StarSchema,
+)
+from app.modules.movies.services.movie_service import MovieService
+from app.modules.order.routers.order_router import service
+from app.modules.order.schemas.order_schemas import (
+    OrderListResponseSchema,
+    OrderAdminFilter,
+)
+
+moderator_router = APIRouter(prefix="/moderator", tags=["Moderator"])
+
+
+@moderator_router.post(
+    "/genres",
+    dependencies=[Depends(get_current_moderator_user)],
+    summary="Create a new genre",
+    description=(
+        "<h3>This endpoint allows moderators to create a new genre in the database.</h3>"
+    ),
+    responses={
+        201: {
+            "description": "Genre created successfully.",
+        },
+        400: {
+            "description": "Invalid input data.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid input data."}}
+            },
+        },
+    },
+    status_code=201,
+)
+async def create_genre(
+    name: str,
+    service: MovieService = Depends(get_movie_service),
+) -> GenreSchema:
+    genre_db = await service.create_genre(name)
+    return GenreSchema.model_validate(genre_db)
+
+
+@moderator_router.put(
+    "/genres/{genre_id}",
+    dependencies=[Depends(get_current_moderator_user)],
+    summary="Update an existing genre",
+    description=(
+        "<h3>This endpoint allows moderators to update an existing genre in the database.</h3>"
+    ),
+    responses={
+        200: {
+            "description": "Genre updated successfully.",
+        },
+        400: {
+            "description": "Invalid input data.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid input data."}}
+            },
+        },
+        404: {
+            "description": "Genre not found.",
+            "content": {
+                "application/json": {"example": {"detail": "Genre not found."}}
+            },
+        },
+    },
+    status_code=200,
+)
+async def update_genre(
+    genre_id: int,
+    name: str,
+    service: MovieService = Depends(get_movie_service),
+) -> GenreSchema:
+    genre_db = await service.update_genre(genre_id, name)
+    return GenreSchema.model_validate(genre_db)
+
+
+@moderator_router.delete(
+    "/genres/{genre_id}",
+    dependencies=[Depends(get_current_moderator_user)],
+    summary="Delete a genre",
+    description=(
+        "<h3>This endpoint allows moderators to delete a genre from the database.</h3>"
+    ),
+    responses={
+        200: {
+            "description": "Genre deleted successfully.",
+        },
+        404: {
+            "description": "Genre not found.",
+            "content": {
+                "application/json": {"example": {"detail": "Genre not found."}}
+            },
+        },
+    },
+    status_code=200,
+)
+async def delete_genre(
+    genre_id: int,
+    service: MovieService = Depends(get_movie_service),
+) -> dict[str, str]:
+    return await service.delete_genre(genre_id)
+
+
+@moderator_router.post(
+    "/movies/",
+    dependencies=[Depends(get_current_moderator_user)],
+    response_model=MovieDetailSchema,
+    summary="Add a new movie",
+    description=(
+        "<h3>This endpoint allows moderators to add a new movie to the database.</h3>"
+    ),
+    responses={
+        201: {
+            "description": "Movie created successfully.",
+        },
+        400: {
+            "description": "Invalid input data.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid input data."}}
+            },
+        },
+    },
+    status_code=201,
+)
+async def create_movie(
+    movie_data: MovieCreateSchema,
+    service: MovieService = Depends(get_movie_service),
+) -> MovieDetailSchema:
+    movie = await service.create_movie(movie_data)
+    return MovieDetailSchema.model_validate(movie)
+
+
+@moderator_router.put(
+    "/movies/{movie_id}",
+    dependencies=[Depends(get_current_moderator_user)],
+    response_model=MovieDetailSchema,
+    summary="Update an existing movie",
+    description=(
+        "<h3>This endpoint allows moderators to update an existing movie in the database.</h3>"
+    ),
+    responses={
+        200: {
+            "description": "Movie updated successfully.",
+        },
+        400: {
+            "description": "Invalid input data.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid input data."}}
+            },
+        },
+        404: {
+            "description": "Movie not found.",
+            "content": {
+                "application/json": {"example": {"detail": "Movie not found."}}
+            },
+        },
+    },
+    status_code=200,
+)
+async def update_movie(
+    movie_id: int,
+    movie_data: MovieUpdateSchema,
+    service: MovieService = Depends(get_movie_service),
+) -> MovieDetailSchema:
+    movie = await service.update_movie(movie_id, movie_data)
+    return MovieDetailSchema.model_validate(movie)
+
+
+# async def delete_movie(db: AsyncSession, movie_id: int):
+#     return {"detail": "Deletion disabled until purchases are implemented"}
+
+
+@moderator_router.post(
+    "/stars",
+    dependencies=[Depends(get_current_moderator_user)],
+    summary="Create a new star",
+    description=(
+        "<h3>This endpoint allows moderators to create a new star in the database.</h3>"
+    ),
+    responses={
+        201: {
+            "description": "Star created successfully.",
+        },
+        400: {
+            "description": "Invalid input data.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid input data."}}
+            },
+        },
+    },
+    status_code=201,
+)
+async def create_star(
+    name: str,
+    service: MovieService = Depends(get_movie_service),
+) -> StarSchema:
+    star_db = await service.create_star(name)
+    return StarSchema.model_validate(star_db)
+
+
+@moderator_router.put(
+    "/stars/{star_id}",
+    dependencies=[Depends(get_current_moderator_user)],
+    summary="Update an existing star",
+    description=(
+        "<h3>This endpoint allows moderators to update an existing star in the database.</h3>"
+    ),
+    responses={
+        200: {
+            "description": "Star updated successfully.",
+        },
+        400: {
+            "description": "Invalid input data.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid input data."}}
+            },
+        },
+        404: {
+            "description": "Star not found.",
+            "content": {"application/json": {"example": {"detail": "Star not found."}}},
+        },
+    },
+    status_code=200,
+)
+async def update_star(
+    star_id: int,
+    name: str,
+    service: MovieService = Depends(get_movie_service),
+) -> StarSchema:
+    star_db = await service.update_star(star_id, name)
+    return StarSchema.model_validate(star_db)
+
+
+@moderator_router.delete(
+    "/stars/{star_id}",
+    dependencies=[Depends(get_current_moderator_user)],
+    summary="Delete a star",
+    description=(
+        "<h3>This endpoint allows moderators to delete a star from the database.</h3>"
+    ),
+    responses={
+        200: {
+            "description": "Star deleted successfully.",
+        },
+        404: {
+            "description": "Star not found.",
+            "content": {"application/json": {"example": {"detail": "Star not found."}}},
+        },
+    },
+    status_code=200,
+)
+async def delete_star(
+    star_id: int,
+    service: MovieService = Depends(get_movie_service),
+) -> dict[str, str]:
+    return await service.delete_star(star_id)
+
+
+@moderator_router.post(
+    "/certification/",
+    response_model=CertificationSchema,
+    dependencies=[Depends(get_current_moderator_user)],
+    summary="Create a new certification",
+    description=(
+        "<h3>This endpoint allows moderators to create a new certification in the database.</h3>"
+    ),
+    responses={
+        201: {
+            "description": "Certification created successfully.",
+        },
+        400: {
+            "description": "Invalid input data.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid input data."}}
+            },
+        },
+    },
+    status_code=201,
+)
+async def create_certification(
+    certification_name: CertificationCreateSchema,
+    service: MovieService = Depends(get_movie_service),
+) -> CertificationSchema:
+    certification_db = await service.create_certification(certification_name)
+    return CertificationSchema.model_validate(certification_db)
+
+
+@moderator_router.get(
+    "/carts",
+    dependencies=[Depends(get_current_moderator_user)],
+    response_model=list[UserCartSchema],
+    summary="View all users' carts",
+    description=(
+        "<h3>This endpoint allows moderators to view all users' carts for analysis or troubleshooting.</h3>"
+    ),
+    responses={
+        200: {"description": "List of all carts retrieved successfully."},
+    },
+    status_code=200,
+)
+async def get_all_carts(
+    service: CartService = Depends(get_cart_service),
+) -> list[UserCartSchema]:
+    return await service.get_all_carts()  # type: ignore
+
+
+@moderator_router.get(
+    "/carts/movie/{movie_id}",
+    dependencies=[Depends(get_current_moderator_user)],
+    response_model=list[UserCartSchema],
+    summary="Check which carts contain a specific movie",
+    description=(
+        "<h3>Notify moderators when attempting to delete a movie that exists in users' carts.</h3>"
+    ),
+    responses={
+        200: {"description": "List of carts containing the movie."},
+        404: {
+            "description": "Movie not found in any cart.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Movie not found in any cart."}
+                }
+            },
+        },
+    },
+    status_code=200,
+)
+async def check_movie_in_carts(
+    movie_id: int,
+    service: CartService = Depends(get_cart_service),
+) -> list[UserCartSchema]:
+    carts = await service.check_movie_in_carts(movie_id)
+    if not carts:
+        raise HTTPException(status_code=404, detail="Movie not found in any cart.")
+    return carts  # type: ignore
+
+
+@moderator_router.get(
+    "/orders",
+    response_model=OrderListResponseSchema,
+    summary="List all orders with filters",
+)
+async def admin_list_orders(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    _admin=Depends(get_current_moderator_user),
+    filters: OrderAdminFilter = Depends(),
+):
+    orders, total = await service.get_all_orders(session, filters=filters)
+    return OrderListResponseSchema(
+        items=orders,  # type: ignore
+        total=total,
+        page=filters.page,
+        page_size=filters.page_size,
+    )

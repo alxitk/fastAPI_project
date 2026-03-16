@@ -1,0 +1,199 @@
+import decimal
+from datetime import datetime
+from decimal import Decimal
+from typing import List, Optional
+
+from pydantic import BaseModel, Field
+
+from app.modules.movies.schemas.examples.movies_schema_examples import (
+    director_schema_example,
+    star_schema_example,
+    genre_schema_example,
+    certification_schema_example,
+    movie_list_response_schema_example,
+    movie_list_item_example,
+    movie_create_schema_example,
+    movie_detail_schema_example,
+    movie_comment_schema_example,
+    genre_with_count_schema_example,
+    star_with_count_schema_example,
+    movie_favorites_schema_example,
+)
+
+
+class GenreSchema(BaseModel):
+    id: int
+    name: str
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {"examples": [genre_schema_example]},  # type: ignore[list-item]
+    }
+
+
+class StarSchema(BaseModel):
+    id: int
+    name: str
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {"examples": [star_schema_example]},  # type: ignore[list-item]
+    }
+
+
+class DirectorSchema(BaseModel):
+    id: int
+    name: str
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {"examples": [director_schema_example]},  # type: ignore[list-item]
+    }
+
+
+class CertificationSchema(BaseModel):
+    id: int
+    name: str
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {"examples": [certification_schema_example]},  # type: ignore[list-item]
+    }
+
+
+class CertificationCreateSchema(BaseModel):
+    name: str
+
+
+class MovieCommentSchema(BaseModel):
+    id: int
+    text: str
+    user_id: int
+    parent_id: int | None
+    created_at: datetime
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {"examples": [movie_comment_schema_example]},  # type: ignore[list-item]
+    }
+
+
+class MovieBaseSchema(BaseModel):
+    name: str = Field(..., max_length=255)
+    year: int = Field(..., ge=1888)
+    time: int
+    imdb: float = Field(..., ge=0, le=10)
+    votes: int
+    description: str = Field(..., max_length=255)
+    price: decimal.Decimal = Field(..., max_digits=10, decimal_places=2)
+
+    model_config = {"from_attributes": True}
+
+
+class MovieListItemSchema(BaseModel):
+    id: int
+    name: str
+    year: int
+    imdb: float
+    price: Decimal
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {"examples": [movie_list_item_example]},  # type: ignore[list-item]
+    }
+
+
+class MovieDetailSchema(MovieBaseSchema):
+    id: int
+    genres: list[GenreSchema]
+    stars: list[StarSchema]
+    directors: list[DirectorSchema]
+    certification: CertificationSchema | None
+
+    comments: list[MovieCommentSchema] = []
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {"examples": [movie_detail_schema_example]},  # type: ignore[list-item]
+    }
+
+
+class MovieListResponseSchema(BaseModel):
+    movies: List[MovieListItemSchema]
+    prev_page: Optional[str]
+    next_page: Optional[str]
+    total_pages: int
+    total_items: int
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {"examples": [movie_list_response_schema_example]},  # type: ignore[list-item]
+    }
+
+
+class MovieCreateSchema(BaseModel):
+    name: str
+    year: int
+    time: int
+    imdb: float
+    votes: int
+    description: str
+    certification_id: int
+    price: Decimal
+    genres: list[str]
+    stars: list[str]
+    directors: list[str]
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {"examples": [movie_create_schema_example]},  # type: ignore[list-item]
+    }
+
+
+class MovieUpdateSchema(BaseModel):
+    name: Optional[str] = None
+    year: Optional[int] = None
+    time: Optional[int] = None
+    imdb: Optional[float] = None
+    votes: Optional[int] = None
+    description: Optional[str] = None
+    certification_id: Optional[int] = None
+    price: Optional[Decimal] = None
+
+    genres: Optional[list[str]] = None
+    stars: Optional[list[str]] = None
+    directors: Optional[list[str]] = None
+
+
+class MovieFavoritesSchema(BaseModel):
+    id: int
+    user_id: int
+    movie_id: int
+    created_at: datetime
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {"example": movie_favorites_schema_example},  # type: ignore[dict-item]
+    }
+
+
+class GenreWithCountSchema(BaseModel):
+    id: int
+    name: str
+    movie_count: int
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {"examples": [genre_with_count_schema_example]},  # type: ignore[list-item]
+    }
+
+
+class StarWithCountSchema(BaseModel):
+    id: int
+    name: str
+    movie_count: int
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {"examples": [star_with_count_schema_example]},  # type: ignore[list-item]
+    }
